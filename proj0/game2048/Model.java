@@ -190,11 +190,54 @@ public class Model extends Observable {
      * 1. There is at least one empty space on the board.
      * 2. There are two adjacent tiles with the same value.
      */
+
     public static boolean atLeastOneMoveExists(Board b) {
-        // TODO: Fill in this function.
+        if(emptySpaceExists(b))
+            return true;
+        if(adjacentTilesExist(b))
+            return true;
         return false;
     }
 
+    /* goes through every tile and runs the method 'checkAdjacent' */
+    public static boolean adjacentTilesExist(Board b) {
+        int length = b.size();
+        Tile temp, test;
+        for( int c = 0; c < length; c++) {
+            for (int r = 0; r < length; r++) {
+                if(checkAdjacent(c,r,b)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean checkAdjacent(int c, int r, Board b) {
+        int val = b.tile(c, r).value();
+        if (c != b.size() - 1 && b.tile(c + 1, r) != null) {
+            int up = b.tile(c + 1, r).value();
+            if(val == up)
+                return true;
+
+        }
+        if (c != 0 && b.tile(c - 1, r) != null) {
+            int down = b.tile(c - 1, r).value();
+            if(val == down)
+                return true;
+        }
+        if (r != b.size() - 1 && b.tile(c, r + 1) != null) {
+            int left = b.tile(c, r + 1).value();
+            if(val == left)
+                return true;
+        }
+        if (r != 0 && b.tile(c, r - 1) != null) {
+            int right = b.tile(c, r - 1).value();
+            if(val == right)
+                return true;
+        }
+        return false;
+    }
 
     @Override
      /** Returns the model as a string, used for debugging. */
