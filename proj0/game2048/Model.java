@@ -144,12 +144,11 @@ public class Model extends Observable {
             for(int c = 0; c < length; c++) {
                 Tile tile = b.tile(c, r);
                 if(tile == null) {
-                    empty = true;
-                    break;
+                    return true;
                 }
             }
         }
-        return empty;
+        return false;
     }
 
     /**
@@ -158,10 +157,33 @@ public class Model extends Observable {
      * given a Tile object t, we get its value with t.value().
      */
     public static boolean maxTileExists(Board b) {
-        // TODO: Fill in this function.
+        int length = b.size();
+        boolean exists = false;
+        Tile tile = null;
+
+        for(int c = 0; c< length; c++) {
+            for(int r = 0; r< length; r++) {
+                tile = b.tile(c, r);
+
+                if(tileExists(tile)){
+                    int val = tile.value();
+                    if(val == MAX_PIECE) {
+                        return true;
+                    }
+
+                }
+
+
+            }
+        }
         return false;
     }
 
+    public static boolean tileExists(Tile t){
+        if(t==null)
+            return false;
+        return true;
+    }
     /**
      * Returns true if there are any valid moves on the board.
      * There are two ways that there can be valid moves:
