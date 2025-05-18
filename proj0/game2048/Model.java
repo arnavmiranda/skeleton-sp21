@@ -106,6 +106,37 @@ public class Model extends Observable {
      *    value, then the leading two tiles in the direction of motion merge,
      *    and the trailing tile does not.
      * */
+
+    public int upNum(int c, int r) {
+        Tile us = board.tile(c, r);
+        Tile up = board.tile(c, r + 1);
+
+        if (tileExists(up) && up.value() != us.value()) {
+            return 0;
+        } else if (tileExists(up) && up.value() == us.value()) {
+            return 1;
+        } else {
+            if(r == board.size()-1) return 1;
+
+            Tile doubleup = board.tile(c, r + 2);
+            if (tileExists(doubleup) && us.value() != doubleup.value()) {
+                return 1;
+            } else if (tileExists(doubleup) && us.value() == doubleup.value()) {
+                return 2;
+
+            } else {
+                if(r == board.size()-2) return 2;
+
+                Tile tripleup = board.tile(c, r + 3);
+                if (tileExists(tripleup) && us.value() != tripleup.value()) {
+                    return 2;
+                } else if (tileExists(tripleup) && us.value() == tripleup.value()) {
+                    return 3;
+                } else return 3;
+            }
+        }
+    }
+
     public boolean tilt(Side side) {
         boolean changed;
         changed = false;
@@ -113,6 +144,23 @@ public class Model extends Observable {
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+        board.setViewingPerspective(side);
+        Tile t;
+        for(int row = board.size() - 2; row >= 0; row--) {
+            for(int col = 0; col < board.size() ; col++) {
+                t=board.tile(col,row);
+                if(t!=null) {
+                    int shift = upNum(col, row);
+                    if(shift!=0){
+                        changed = true;
+                        if(board.move(col, row + shift, t)){
+                            score+= t.value() * 2;
+                        }
+                    }
+                }
+            }
+        }
+        board.setViewingPerspective(Side.NORTH);
 
         checkGameOver();
         if (changed) {
