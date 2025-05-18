@@ -26,9 +26,9 @@ public enum Side {
     WEST(1, 0, -1, 0);
 
     /** The side that is in the direction (DCOL, DROW) from any square
-     *  of the board.  Here, "direction (DCOL, DROW) means that to
+     *  of the board.  Here, "direction (DCOL, DROW)" means that to
      *  move one space in the direction of this Side increases the row
-     *  by DROW and the colunn by DCOL.  (COL0, ROW0) are the row and
+     *  by DROW and the column by DCOL.  (COL0, ROW0) are the row and
      *  column of the lower-left square when sitting at the board facing
      *  towards this Side. */
     Side(int col0, int row0, int dcol, int drow) {

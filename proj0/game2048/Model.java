@@ -137,8 +137,19 @@ public class Model extends Observable {
      *  Empty spaces are stored as null.
      * */
     public static boolean emptySpaceExists(Board b) {
-        // TODO: Fill in this function.
-        return false;
+        private int length = b.size();
+        boolean empty = false;
+
+        for(int r; r < length; r++) {
+            for(int c; c < length; c++) {
+                Tile tile = b.tile(c, r);
+                if(tile == null) {
+                    empty = true;
+                    break;
+                }
+            }
+        }
+        return empty;
     }
 
     /**

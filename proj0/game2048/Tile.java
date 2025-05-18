@@ -19,8 +19,8 @@ public class Tile {
     public int row() {
         return row;
     }
-
     /** Return my current column. */
+
     public int col() {
         return col;
     }
