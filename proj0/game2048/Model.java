@@ -137,11 +137,11 @@ public class Model extends Observable {
      *  Empty spaces are stored as null.
      * */
     public static boolean emptySpaceExists(Board b) {
-        private int length = b.size();
+        int length = b.size();
         boolean empty = false;
 
-        for(int r; r < length; r++) {
-            for(int c; c < length; c++) {
+        for(int r = 0; r < length; r++) {
+            for(int c = 0; c < length; c++) {
                 Tile tile = b.tile(c, r);
                 if(tile == null) {
                     empty = true;
