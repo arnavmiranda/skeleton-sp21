@@ -130,84 +130,87 @@ public class Model extends Observable {
         // changed local variable to true.
         board.setViewingPerspective(side);
 
-        /*TODO: code goes here
-        * im thinking i could iterate only through columns, taking row values 2 1 0, and then keeping a iteration variable for each row 1 2 3 that
-        * specifies whether it has been combined there or not
-        * ALSO score increment can be done at the end through the move method
-        * MOVE METHOD RETURNS TRUE IF MERGE- WE CAN CHANGE BOOLEAN VALUE ACCORDINGLY
-        * just set changed = true at the end by default- all it does is redraw
-        *
-        * we only use board.move and board.tile
-         */
-
-        for(int col = 0; col < board.size(); col++) {
+        for (int col = 0; col < board.size(); col++) {
             boolean top = false, third = false;
 
-            for(int row = 2; row>=0; row--) {
-                Tile us = board.tile(col , row);
-                if(!tileExists(us)) {
+            for (int row = 2; row >= 0; row--) {
+                Tile us = board.tile(col, row);
+                if (!tileExists(us)) {
                     continue;
                 }
-                Tile above = board.tile(col, row+1);
-                if(tileExists(above)) {
-                    if(equalTiles(above, us )) {
-                        if(row == 2 && !top) {
-                            board.move(col,row+1,us);
-                            top= true;
-                            score+= us.value() * 2;
-                            continue;
-                        }
-                        if(row == 1 && !third) {
-                            board.move(col, row + 1,us);
-                            third = true;
-                            score+= us.value() * 2;
-                            continue;
-                        }
-                        if(row == 0) {
-                            board.move(col, row+1, us);
+                Tile above = board.tile(col, row + 1);
+                if (tileExists(above)) {
+                    if (equalTiles(above, us)) {
+                        if (row == 2 && !top) {
+                            board.move(col, row + 1, us);
+                            top = true;
                             score += us.value() * 2;
+                            changed= true;
+                            continue;
+                        }
+                        if (row == 1 && !third) {
+                            board.move(col, row + 1, us);
+                            third = true;
+                            score += us.value() * 2;
+                            changed = true;
+                            continue;
+                        }
+                        if (row == 0) {
+                            board.move(col, row + 1, us);
+                            score += us.value() * 2;
+                            changed = true;
                             continue;
                         }
                     }
-                } else if(row == 2) {
-                    board.move(col, row+1, us);
+                    continue;
+                } else if (row == 2) {
+                    board.move(col, row + 1, us);
+                    changed= true;
                     continue;
                 }
-                Tile twice_above = board.tile(col, row+2);
+                Tile twice_above = board.tile(col, row + 2);
 
-                if(tileExists(twice_above)) {
+                if (tileExists(twice_above)) {
                     if (equalTiles(twice_above, us)) {
                         if (row == 1 && !top) {
                             board.move(col, row + 2, us);
                             score += us.value() * 2;
                             top = true;
+                            changed= true;
                             continue;
                         }
                         if (row == 0 && !third) {
                             board.move(col, row + 2, us);
                             score += us.value() * 2;
                             third = true;
+                            changed = true;
                             continue;
                         }
                     }
                     if (row == 1 || row == 0) {
                         board.move(col, row + 1, us);
+                        changed = true;
                         continue;
                     }
                 }
-                    if(row ==1)
-
-                        //this has to now account for both cases: one where above tile was equal but alr merged
-                        // and other where it was not equal to begin with
-                        //boith cases have same outcome: only push up by one
-
+                Tile thrice_above = board.tile(col, 3);
+                if (tileExists(thrice_above)) {
+                    if (equalTiles(thrice_above, us)) {
+                        if (!top) {
+                            board.move(col, 3, us);
+                            score += us.value() * 2;
+                            changed = true;
+                        }
+                    } else {
+                        board.move(col, 2, us);
+                        changed = true;
+                    }
+                } else {
+                    board.move(col, 3, us);
+                    changed = true;
                 }
-
             }
         }
-
-
-
 
         board.setViewingPerspective(Side.NORTH);
 
