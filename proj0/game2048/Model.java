@@ -193,19 +193,28 @@ public class Model extends Observable {
                         continue;
                     }
                 }
+                else if( row == 1) {
+                    board.move(col, 3, us);
+                    changed = true;
+                    continue;
+                }
+
                 Tile thrice_above = board.tile(col, 3);
+
                 if (tileExists(thrice_above)) {
+
                     if (equalTiles(thrice_above, us)) {
                         if (!top) {
                             board.move(col, 3, us);
                             score += us.value() * 2;
                             changed = true;
+                            continue;
                         }
-                    } else {
-                        board.move(col, 2, us);
-                        changed = true;
                     }
-                } else {
+                    board.move(col, 2, us);
+                    changed = true;
+                }
+                else {
                     board.move(col, 3, us);
                     changed = true;
                 }
