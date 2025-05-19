@@ -107,34 +107,18 @@ public class Model extends Observable {
      *    and the trailing tile does not.
      * */
 
-    public int upNum(int c, int r) {
-        Tile us = board.tile(c, r);
-        Tile up = board.tile(c, r + 1);
+    /*helper methods: */
 
-        if (tileExists(up) && up.value() != us.value()) {
-            return 0;
-        } else if (tileExists(up) && up.value() == us.value()) {
-            return 1;
-        } else {
-            if(r == board.size()-1) return 1;
+    public static boolean tileExists(Tile t){
+        if(t==null)
+            return false;
+        return true;
+    }
 
-            Tile doubleup = board.tile(c, r + 2);
-            if (tileExists(doubleup) && us.value() != doubleup.value()) {
-                return 1;
-            } else if (tileExists(doubleup) && us.value() == doubleup.value()) {
-                return 2;
-
-            } else {
-                if(r == board.size()-2) return 2;
-
-                Tile tripleup = board.tile(c, r + 3);
-                if (tileExists(tripleup) && us.value() != tripleup.value()) {
-                    return 2;
-                } else if (tileExists(tripleup) && us.value() == tripleup.value()) {
-                    return 3;
-                } else return 3;
-            }
-        }
+    public static boolean equalTiles(Tile a, Tile b) {
+        if(a.value() == b.value())
+            return true;
+        return false;
     }
 
     public boolean tilt(Side side) {
@@ -145,21 +129,26 @@ public class Model extends Observable {
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
         board.setViewingPerspective(side);
-        Tile t;
-        for(int row = board.size() - 2; row >= 0; row--) {
-            for(int col = 0; col < board.size() ; col++) {
-                t=board.tile(col,row);
-                if(t!=null) {
-                    int shift = upNum(col, row);
-                    if(shift!=0){
-                        changed = true;
-                        if(board.move(col, row + shift, t)){
-                            score+= t.value() * 2;
-                        }
-                    }
-                }
+
+        /*TODO: code goes here
+        * im thinking i could iterate only through columns, taking row values 2 1 0, and then keeping a iteration variable for each row 1 2 3 that
+        * specifies whether it has been combined there or not
+        * ALSO score increment can be done at the end through the move method
+        * MOVE METHOD RETURNS TRUE IF MERGE- WE CAN CHNAGE BOOLEAN VALUE ACCORIDNGLY
+        * just set changed = true at the end by default- all it does is redraw
+        *
+        * we only use board.move and board.tile
+         */
+
+        for(int col = 0; col < board.size(); col++) {
+            for(int row = 2; row>=0; row--) {
+
             }
         }
+
+
+
+
         board.setViewingPerspective(Side.NORTH);
 
         checkGameOver();
@@ -227,11 +216,7 @@ public class Model extends Observable {
         return false;
     }
 
-    public static boolean tileExists(Tile t){
-        if(t==null)
-            return false;
-        return true;
-    }
+
     /**
      * Returns true if there are any valid moves on the board.
      * There are two ways that there can be valid moves:
