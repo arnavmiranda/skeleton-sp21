@@ -38,7 +38,7 @@ public class ArrayDeque<T> {
                 first = items.length - 1;
             }
         } else {
-            resizeTheArrayinthisnewCircularWaySomehow(size * R_FACTOR);
+            resize(size * R_FACTOR);
         }
     }
 
@@ -50,12 +50,12 @@ public class ArrayDeque<T> {
                 last = 0;
             }
         } else {
-            resizeTheArrayinthisnewCircularWaySomehow(size * R_FACTOR);
+            resize(size * R_FACTOR);
         }
     }
 
-    /*
-    public void resizeArray() {
+    #WRONG
+    public void reduceArray() {
         if(items.length>16) {
             while(USAGE_RATIO > 0.25) {
                 resize(items.length / 2)
@@ -65,10 +65,27 @@ public class ArrayDeque<T> {
 
      public void resize(int capacity) {
      T[] temp = (T[]) new Object[capacity];
-     System.arraycopy(items, 0, temp, 0, size);
+     if(capacity > items.length) {
+         if(first < last) {
+             System.arraycopy(items, first, temp, first, size);
+         } else {
+             int newfirst = capacity - (size - 1 - first);
+             for(int i = 0; i < capacity; i++) {
+                 if(i <= last) {
+                     temp[i] = items[i];
+                 }
+                 if( i >= newfirst) {
+                     temp[i] = items[  newfirst - i + first]
+                 }
+                 else temp[i] = null;
+             }
+             
+         }
+
+     }
      items = temp;
      }
-*/
+
     public void addFirst(T item) {
         changeFirst();
         items[first] = item;
