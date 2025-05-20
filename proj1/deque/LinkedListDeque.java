@@ -123,6 +123,18 @@ class LList<T> {
         size--;
         return element.item;
     }
+    public T get(int index) {
+        int c = index;
+        Node recur = sentinel.next;
+        while(recur.next != sentinel) {
+            if(c == 0) {
+                return recur.item;
+            }
+            recur = recur.next;
+            c++;
+        }
+        return null;
+    }
 }
 
 
