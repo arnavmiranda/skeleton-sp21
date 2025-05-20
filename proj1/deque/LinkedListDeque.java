@@ -50,8 +50,9 @@ class LinkedListDeque<T> {
         return this.size;
     }
     public boolean isEmpty() {
-        if (sentinel.next == null && sentinel.prev == null)
+        if(size == 0) {
             return true;
+        }
         return false;
     }
     public void makeEmpty() {
