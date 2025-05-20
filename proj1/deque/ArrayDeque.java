@@ -12,6 +12,21 @@ public class ArrayDeque<T> {
         size = 0;
     }
 
+    /*
+    public void resizeArray() {
+        if(items.length>16) {
+            while(USAGE_RATIO > 0.25) {
+                resize(items.length / 2)
+            }
+        }
+    }
+     */
+     public void resize(int capacity) {
+     T[] temp = (T[]) new Object[capacity];
+     System.arraycopy(items, 0, temp, 0, size);
+     items = temp;
+     }
+
     public void addFirst(T item) {
         if(size == items.length) {
             resize(size * R_FACTOR);
@@ -20,12 +35,9 @@ public class ArrayDeque<T> {
         temp[0] = item;
         System.arraycopy(items, 0, temp, 1, size);
         items = temp;
+        size++;
     }
-    public void resize(int capacity) {
-        T[] temp = (T[]) new Object[capacity];
-        System.arraycopy(items, 0, temp, 0, size);
-        items = temp;
-    }
+
     public void addLast(T x) {
         if(size == items.length) {
             resize(size * R_FACTOR);
@@ -53,10 +65,11 @@ public class ArrayDeque<T> {
             return null;
         }
         T[] temp = (T[]) new Object[items.length];
-        T returnobj = items[0];
+        T item = items[0];
         System.arraycopy(items, 1, temp, 0, size-1);
         items = temp;
-        return returnobj;
+        size--;
+        return item;
     }
     public int size() {
         return size;
