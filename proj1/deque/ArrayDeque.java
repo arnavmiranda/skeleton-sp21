@@ -7,9 +7,51 @@ public class ArrayDeque<T> {
     public static final int R_FACTOR = 2;
     public int USAGE_RATIO = size / items.length;
 
+    private int first;
+    private int last;
+
     public ArrayDeque() {
         items = (T[]) new Object[INITIAL_ARRAY_SIZE];
         size = 0;
+        first = 0;
+        last = 0;
+    }
+
+    public boolean needsResizing() {
+        if (size == items.length) {
+            return true;
+        }
+        if (Math.abs(first - last) == 1) {
+            return true;
+        }
+        if (Math.abs(first - last) == (items.length - 1)) {
+            return true;
+        }
+        return false;
+    }
+
+    public void changeFirst() {
+        if (!needsResizing()) {
+            if (first != 0) {
+                first--;
+            } else {
+                first = items.length - 1;
+            }
+        } else {
+            resizeTheArrayinthisnewCircularWaySomehow(size * R_FACTOR);
+        }
+    }
+
+    public void changeLast() {
+        if (!needsResizing()) {
+            if (last != items.length - 1) {
+                last++;
+            } else {
+                last = 0;
+            }
+        } else {
+            resizeTheArrayinthisnewCircularWaySomehow(size * R_FACTOR);
+        }
     }
 
     /*
@@ -20,71 +62,104 @@ public class ArrayDeque<T> {
             }
         }
     }
-     */
+
      public void resize(int capacity) {
      T[] temp = (T[]) new Object[capacity];
      System.arraycopy(items, 0, temp, 0, size);
      items = temp;
      }
-
+*/
     public void addFirst(T item) {
-        if(size == items.length) {
-            resize(size * R_FACTOR);
-        }
-        T[] temp = (T[]) new Object[items.length];
-        temp[0] = item;
-        System.arraycopy(items, 0, temp, 1, size);
-        items = temp;
+        changeFirst();
+        items[first] = item;
         size++;
     }
 
-    public void addLast(T x) {
-        if(size == items.length) {
-            resize(size * R_FACTOR);
-        }
-        items[size] = x;
+    public void addLast(T item) {
+        changeLast();
+        items[last] = item;
         size++;
     }
+
     public T getLast() {
-        return items[size - 1];
+        return items[last];
     }
+
+    public T getFirst() {
+        return items[first];
+    }
+
+    public int circularIndex(int index) {
+        int num = first;
+        while (num != size) {
+            if (index == 0) {
+                return num;
+            }
+            index--;
+            num++;
+            if (num == size) {
+                num = 0;
+            }
+        }
+        return -1;
+    }
+
     public T get(int index) {
-        return items[index];
+        return items[circularIndex(index)];
     }
+
     public T removeLast() {
-        if(isEmpty()) {
+        if (isEmpty()) {
             return null;
         }
-        T item = items[size - 1];
-        items[size - 1] = null;
+        T item = items[last];
+        items[last] = null;
+        if (last != 0) {
+            last--;
+        } else {
+            last = size - 1;
+        }
         size--;
         return item;
     }
+
+    //TODO: CHECK IF BOTH REMOVES HANDLE SINGLE ELEMENT ALISTS
+
     public T removeFirst() {
-        if(isEmpty()) {
+        if (isEmpty()) {
             return null;
         }
-        T[] temp = (T[]) new Object[items.length];
-        T item = items[0];
-        System.arraycopy(items, 1, temp, 0, size-1);
-        items = temp;
+        T item = items[first];
+        items[first] = null;
+        if (first != (size - 1)) {
+            first++;
+        } else {
+            first = 0;
+        }
         size--;
         return item;
     }
+
     public int size() {
         return size;
     }
+
     public boolean isEmpty() {
-        if(size == 0) {
+        if (size == 0) {
             return true;
         }
         return false;
     }
+
     public void printDeque() {
-        for(T i : items) {
-            System.out.println(i + " ");
+        int num = first;
+        while (num != size) {
+            System.out.print(items[num] + " ");
+            num++;
+            if (num == size) {
+                num = 0;
+            }
         }
         System.out.println();
     }
 }
-
