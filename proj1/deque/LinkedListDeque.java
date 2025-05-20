@@ -12,8 +12,6 @@ class LList<T> {
      * Linked List data structure.
      */
 
-
-
     private class IntNode {
         public T item;
         public IntNode next;
@@ -27,47 +25,45 @@ class LList<T> {
     }
 
     /* Sentinel Node implementation of Singly Linked Lists. */
-    private IntNode sentinel = new IntNode(null , null);
+    private IntNode sentinel = new IntNode(null , null, null);
     private int size;
 
-    public SLList() {
+    public LList() {
         size = 0;
     }
-    public SLList(T x) {
-        sentinel.next = new IntNode(x, null);
+    public LList(T x) {
+        IntNode element = new IntNode(x, sentinel, sentinel);
+        sentinel.next = element;
+        sentinel.prev = element;
         size = 1;
     }
 
-    /** Adds element to beginning of SLL, after sentinel node. */
+    /** Adds element to beginning of LL. */
     public void addFirst(T x) {
-        sentinel.next = new IntNode(x, sentinel);
+        IntNode element = new IntNode(x, sentinel.next, sentinel);
+        sentinel.next.prev = element;
+        sentinel.next = element;
         size += 1;
     }
-    /** Returns first element of SLL, after sentinel node. */
+    /** Returns first element of LL. */
     public T getFirst() {
         return sentinel.next.item;
     }
     /** Adds a node to the final node of SLL. */
     public void addLast(T x) {
-        IntNode iter = sentinel.next;
-        while(iter.next!=null){
-            iter = iter.next;
-        }
-        iter.next = new IntNode(x, null);
+        IntNode element = new IntNode(x, sentinel, sentinel.prev);
+        sentinel.prev.next = element;
+        sentinel.prev = element;
         size += 1;
+    }
+    public T getLast() {
+        return sentinel.prev.item;
     }
     /** Returns size of the SLL, calculated after the sentinel node. */
     public int size() {
         return this.size;
     }
 }
-
-
-
-
-
-
-
 
 
 
