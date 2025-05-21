@@ -41,7 +41,6 @@ public class ArrayDeque<T> {
             resize(size * R_FACTOR);
         }
     }
-
     public void changeLast() {
         if (!needsResizing()) {
             if (last != items.length - 1) {
@@ -53,9 +52,6 @@ public class ArrayDeque<T> {
             resize(size * R_FACTOR);
         }
     }
-
-
-
      public void resize(int capacity) {
      T[] temp = (T[]) new Object[capacity];
      if(capacity > items.length) {
@@ -97,27 +93,32 @@ public class ArrayDeque<T> {
      }
      items = temp;
      }
-
     public void addFirst(T item) {
-        changeFirst();
+        if(isEmpty()) {
+            first = 0;
+            last = 0;
+        } else {
+            changeFirst();
+        }
         items[first] = item;
         size++;
     }
-
     public void addLast(T item) {
-        changeLast();
+        if(isEmpty()) {
+            first = 1;
+            last = 1;
+        } else {
+            changeLast();
+        }
         items[last] = item;
         size++;
     }
-
     public T getLast() {
         return items[last];
     }
-
     public T getFirst() {
         return items[first];
     }
-
     public int circularIndex(int index) {
         int num = first;
         while (num != size) {
@@ -132,11 +133,9 @@ public class ArrayDeque<T> {
         }
         return -1;
     }
-
     public T get(int index) {
         return items[circularIndex(index)];
     }
-
     public T removeLast() {
         if (isEmpty()) {
             return null;
@@ -152,9 +151,6 @@ public class ArrayDeque<T> {
         reduceArray();
         return item;
     }
-
-    //TODO: CHECK IF BOTH REMOVES HANDLE SINGLE ELEMENT ALISTS
-
     public T removeFirst() {
         if (isEmpty()) {
             return null;
@@ -170,15 +166,12 @@ public class ArrayDeque<T> {
         reduceArray();
         return item;
     }
-
     public int size() {
         return size;
     }
-
     public boolean isEmpty() {
         return (size == 0);
     }
-
     public void printDeque() {
         int num = first;
         while (num != size) {
