@@ -47,6 +47,9 @@ public class ArrayDeque<T> {
     }
 
     private void compress() {
+        if(length() <= 16) {
+            return;
+        }
         double USAGE_RATIO = (double) size / length();
         while (USAGE_RATIO < 0.25) {
             T[] temp = (T[]) new Object[length() / 2];
@@ -55,12 +58,15 @@ public class ArrayDeque<T> {
                 System.arraycopy(items, 0, temp, 0, size);
             } else {
                 System.arraycopy(items, start, temp, 0, length() - start);
-                System.arraycopy(items, 0, temp, length() - start + 1, start);
+                System.arraycopy(items, 0, temp, length() - start, start);
             }
             items = temp;
             nextStart = length() - 1;
             nextEnd = size;
             USAGE_RATIO = (double) size / length();
+            if(USAGE_RATIO >= 0.25) {
+                break;
+            }
         }
     }
 
@@ -73,7 +79,7 @@ public class ArrayDeque<T> {
             System.arraycopy(items, 0, temp, 0, size);
         } else {
             System.arraycopy(items, start, temp, 0, length() - start);
-            System.arraycopy(items, 0, temp, length() - start + 1, start);
+            System.arraycopy(items, 0, temp, length() - start, start);
         }
         items = temp;
         nextStart = length() - 1;
@@ -139,6 +145,9 @@ public class ArrayDeque<T> {
     }
 
     public T removeFirst() {
+        if(isEmpty()) {
+            return null;
+        }
         T item = items[start()];
         items[start()] = null;
         size--;
@@ -148,6 +157,9 @@ public class ArrayDeque<T> {
     }
 
     public T removeLast() {
+        if(isEmpty()) {
+            return null;
+        }
         T item = items[end()];
         items[end()] = null;
         size--;
@@ -161,7 +173,7 @@ public class ArrayDeque<T> {
             return;
         }
         if (start() < end()) {
-            for (int i = start(); i < end(); i++) {
+            for (int i = start(); i <= end(); i++) {
                 System.out.print(items[i] + " ");
             }
         } else {
