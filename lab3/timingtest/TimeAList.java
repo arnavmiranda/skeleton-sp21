@@ -16,12 +16,36 @@ public class TimeAList {
             System.out.printf("%12d %12.2f %12d %12.2f\n", N, time, opCount, timePerOp);
         }
     }
+    static AList<Double> times = new AList<>();
+    static AList<Integer> opcounts = new AList<>();
+    static AList<Integer> Ns = new AList<>();
+
+    public static double timeCalculator(int N, int M){
+        SLList<Integer> items = new SLList<>();
+
+        for(int i = 0; i<N; i++) {
+            items.addLast(0);
+        }
+        Stopwatch sw = new Stopwatch();
+
+        for(int i = 0; i < M; i++) {
+            items.getLast();
+        }
+        double time = sw.elapsedTime();
+        return time;
+    }
+    public static final int M = 10000;
 
     public static void main(String[] args) {
-        timeAListConstruction();
+        for (int i = 1000; i < 128000; i *= 2) {
+            double t = timeCalculator(i, M);
+            times.addLast(t);
+            Ns.addLast(i);
+            opcounts.addLast(M);
+        }
+        printTimingTable(Ns, times, opcounts);
     }
 
-    public static void timeAListConstruction() {
-        // TODO: YOUR CODE HERE
-    }
+
+
 }
