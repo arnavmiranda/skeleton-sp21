@@ -5,7 +5,6 @@ public class ArrayDeque<T> {
     private int size;
     public static final int INITIAL_ARRAY_SIZE = 8;
     public static final int R_FACTOR = 2;
-    public int USAGE_RATIO = size / items.length;
 
     private int first;
     private int last;
@@ -17,19 +16,20 @@ public class ArrayDeque<T> {
         last = 0;
     }
 
-    public boolean needsResizing() {
-        if (size == items.length) {
-            return true;
-        }
-        if (Math.abs(first - last) == 1) {
-            return true;
-        }
-        if (Math.abs(first - last) == (items.length - 1)) {
-            return true;
-        }
-        return false;
+    public boolean needsReducing(){
+        double USAGE_RATIO = (double) size / items.length;
+        return (USAGE_RATIO < 0.25);
     }
-
+    public boolean needsResizing() {
+        return (size == items.length);
+    }
+    public void reduceArray() {
+        if(items.length>16) {
+            while(needsReducing()) {
+                resize(items.length / 2);
+            }
+        }
+    }
     public void changeFirst() {
         if (!needsResizing()) {
             if (first != 0) {
@@ -54,14 +54,7 @@ public class ArrayDeque<T> {
         }
     }
 
-    #WRONG
-    public void reduceArray() {
-        if(items.length>16) {
-            while(USAGE_RATIO > 0.25) {
-                resize(items.length / 2)
-            }
-        }
-    }
+
 
      public void resize(int capacity) {
      T[] temp = (T[]) new Object[capacity];
@@ -74,14 +67,33 @@ public class ArrayDeque<T> {
                  if(i <= last) {
                      temp[i] = items[i];
                  }
-                 if( i >= newfirst) {
-                     temp[i] = items[  newfirst - i + first]
+                 if(i >= newfirst) {
+                     temp[i] = items[i - newfirst + first];
                  }
                  else temp[i] = null;
              }
-             
+             first = newfirst;
          }
-
+     }
+     if(capacity < items.length) {
+         if(first < last) {
+             System.arraycopy(items, first, temp, 0, size);
+             first = 0;
+             last = size;
+         }
+         if (first > last) {
+             int index = 0;
+             for(int i = first; i < size; i++) {
+                 temp[index] = items[i];
+                 index++;
+             }
+             for(int i = 0; i < last + 1; i++) {
+                 temp[index] = items[i];
+                 index++;
+             }
+             first = 0;
+             last = size - 1;
+         }
      }
      items = temp;
      }
@@ -137,6 +149,7 @@ public class ArrayDeque<T> {
             last = size - 1;
         }
         size--;
+        reduceArray();
         return item;
     }
 
@@ -154,6 +167,7 @@ public class ArrayDeque<T> {
             first = 0;
         }
         size--;
+        reduceArray();
         return item;
     }
 
@@ -162,10 +176,7 @@ public class ArrayDeque<T> {
     }
 
     public boolean isEmpty() {
-        if (size == 0) {
-            return true;
-        }
-        return false;
+        return (size == 0);
     }
 
     public void printDeque() {
