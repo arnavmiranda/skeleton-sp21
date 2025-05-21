@@ -34,17 +34,11 @@ public class LinkedListDeque<T> {
         sentinel.next = element;
         size += 1;
     }
-    public T getFirst() {
-        return sentinel.next.item;
-    }
     public void addLast(T x) {
         Node element = new Node(x, sentinel, sentinel.prev);
         sentinel.prev.next = element;
         sentinel.prev = element;
         size += 1;
-    }
-    public T getLast() {
-        return sentinel.prev.item;
     }
     public int size() {
         return this.size;
@@ -55,7 +49,7 @@ public class LinkedListDeque<T> {
         }
         return false;
     }
-    public void makeEmpty() {
+    private void makeEmpty() {
         sentinel.next = sentinel;
         sentinel.prev = sentinel;
     }

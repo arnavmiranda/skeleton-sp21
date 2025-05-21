@@ -15,7 +15,7 @@ public class ArrayDeque<T> {
         nextFirst = 3;
         nextLast = 4;
     }
-    public int first(){
+    private int first(){
         if(!isEmpty()){
             if(nextFirst != (items.length - 1)) {
                 return nextFirst + 1;
@@ -25,53 +25,51 @@ public class ArrayDeque<T> {
         }
         return -1;
     }
-    public int last(){
+    private int last(){
         if(!isEmpty()){
             if(nextLast != 0) {
                 return nextLast - 1;
             } else {
-                return size - 1;
+                return items.length - 1;
             }
         }
         return -1;
     }
-    public boolean needsReducing(){
+    private boolean needsReducing(){
         double USAGE_RATIO = (double) size / items.length;
         return (USAGE_RATIO < 0.25);
     }
-    public boolean needsResizing() {
+    private boolean needsResizing() {
         return (size == items.length);
     }
-    public void reduceArray() {
+    private void reduceArray() {
         if(items.length>16) {
             while(needsReducing()) {
                 resize(items.length / 2);
             }
         }
     }
-    public void nextFirst() {
-        if (!needsResizing()) {
-            if(nextFirst != 0) {
-                nextFirst--;
-            } else {
-                nextFirst = items.length - 1;
-            }
+    private void nextFirst() {
+        if(nextFirst != 0) {
+            nextFirst--;
         } else {
+            nextFirst = items.length - 1;
+        }
+        if (needsResizing()) {
             resize(size * R_FACTOR);
         }
     }
-    public void nextLast() {
-        if (!needsResizing()) {
-            if(nextLast != (items.length - 1)) {
-                nextLast++;
-            } else {
-                nextLast = 0;
-            }
+    private void nextLast() {
+        if (nextLast != (items.length - 1)) {
+            nextLast++;
         } else {
+            nextLast = 0;
+        }
+        if (!needsResizing()) {
             resize(size * R_FACTOR);
         }
     }
-     public void resize(int capacity) {
+     private void resize(int capacity) {
      T[] temp = (T[]) new Object[capacity];
      if(capacity > items.length) {
          if(nextFirst == (size - 1) && nextLast == 0) {
@@ -111,28 +109,28 @@ public class ArrayDeque<T> {
      items = temp;
      }
     public void addFirst(T item) {
-        items[nextFirst] = item;
-        size++;
-        nextFirst();
+        if (size == items.length) {
+            size++;
+            nextFirst();
+            items[nextFirst] = item;
+        } else {
+            items[nextFirst] = item;
+            nextFirst();
+            size++;
+        }
     }
     public void addLast(T item) {
         items[nextLast] = item;
         size++;
         nextLast();
     }
-    public T getLast() {
-        if(nextLast != 0) {
-            return items[nextLast - 1];
-        }
-        return items[size - 1];
-    }
-    public T getFirst() {
-        if(nextFirst != (size - 1)) {
-            return items[nextFirst + 1];
-        }
-        return items[0];
-    }
     public T get(int index) {
+        if(isEmpty()) {
+            return null;
+        }
+        if(index > size) {
+            return null;
+        }
         int first = first();
         int last = last();
         if (first < last) {
@@ -149,12 +147,8 @@ public class ArrayDeque<T> {
         }
         int last = last();
         T item = items[last];
-            items[last] = null;
-        if(last == (size - 1)) {
-            nextLast = size - 1;
-        } else {
-            nextLast = nextLast - 1;
-        }
+        items[last] = null;
+        nextLast = last;
         size--;
         reduceArray();
         return item;
@@ -166,11 +160,7 @@ public class ArrayDeque<T> {
         int first = first();
         T item = items[first];
         items[first] = null;
-        if(first == 0) {
-            nextFirst = 0;
-        } else {
-            nextFirst = nextFirst + 1;
-        }
+        nextFirst = first;
         size--;
         reduceArray();
         return item;
