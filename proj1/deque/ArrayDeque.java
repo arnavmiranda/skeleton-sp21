@@ -15,7 +15,6 @@ public class ArrayDeque<T> {
         nextFirst = 3;
         nextLast = 4;
     }
-
     public int first(){
         if(!isEmpty()){
             if(nextFirst != (items.length - 1)) {
@@ -104,7 +103,6 @@ public class ArrayDeque<T> {
                  temp[index] = items[i];
                  index++;
              }
-
          }
      }
      items = temp;
@@ -131,7 +129,6 @@ public class ArrayDeque<T> {
         }
         return items[0];
     }
-
     public T get(int index) {
         int first = first();
         int last = last();
@@ -190,7 +187,6 @@ public class ArrayDeque<T> {
             if(first == items.length){
                 first = 0;
             }
-
         }
     }
 }

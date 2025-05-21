@@ -1,6 +1,6 @@
 package deque;
 
-class LinkedListDeque<T> {
+public class LinkedListDeque<T> {
     private class Node {
         public T item;
         public Node next;
