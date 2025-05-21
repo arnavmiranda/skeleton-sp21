@@ -76,9 +76,10 @@ public class ArrayDeque<T> {
      if(capacity > items.length) {
          if(nextFirst == (size - 1) && nextLast == 0) {
              System.arraycopy(items, 0, temp, 0, size);
+             nextFirst = temp.length - 1;
+             nextLast = size;
          } else {
              int first = nextFirst + 1;
-             int last = nextLast - 1;
              System.arraycopy(items, first, temp, 0, size - first);
              System.arraycopy(items, 0, temp, size - first, first);
              nextFirst = capacity - 1;
@@ -103,6 +104,8 @@ public class ArrayDeque<T> {
                  temp[index] = items[i];
                  index++;
              }
+             nextFirst = capacity - 1;
+             nextLast = size;
          }
      }
      items = temp;
@@ -146,7 +149,7 @@ public class ArrayDeque<T> {
         }
         int last = last();
         T item = items[last];
-        items[last] = null;
+            items[last] = null;
         if(last == (size - 1)) {
             nextLast = size - 1;
         } else {
@@ -181,7 +184,7 @@ public class ArrayDeque<T> {
     public void printDeque() {
         int first = first();
         int last = last();
-        while(first != last) {
+        while(first != last + 1) {
             System.out.print(items[first] + " ");
             first++;
             if(first == items.length){
