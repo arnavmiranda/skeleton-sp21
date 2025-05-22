@@ -1,12 +1,12 @@
 package deque;
 
-public class LinkedListDeque<T> {
+public class LinkedListDeque<T> implements Deque<T> {
     private class Node {
         public T item;
         public Node next;
         public Node prev;
 
-        public Node(T item, Node next, Node prev) {
+        Node(T item, Node next, Node prev) {
             this.item = item;
             this.next = next;
             this.prev = prev;
@@ -21,38 +21,35 @@ public class LinkedListDeque<T> {
         sentinel.next = sentinel;
         sentinel.prev = sentinel;
     }
-    public LinkedListDeque(T x) {
-        Node element = new Node(x, sentinel, sentinel);
+    public LinkedListDeque(T item) {
+        Node element = new Node(item, sentinel, sentinel);
         sentinel.next = element;
         sentinel.prev = element;
         size = 1;
-    }
-
-    public void addFirst(T x) {
-        Node element = new Node(x, sentinel.next, sentinel);
-        sentinel.next.prev = element;
-        sentinel.next = element;
-        size += 1;
-    }
-    public void addLast(T x) {
-        Node element = new Node(x, sentinel, sentinel.prev);
-        sentinel.prev.next = element;
-        sentinel.prev = element;
-        size += 1;
-    }
-    public int size() {
-        return this.size;
-    }
-    public boolean isEmpty() {
-        if(size == 0) {
-            return true;
-        }
-        return false;
     }
     private void makeEmpty() {
         sentinel.next = sentinel;
         sentinel.prev = sentinel;
     }
+    @Override
+    public void addFirst(T item) {
+        Node element = new Node(item, sentinel.next, sentinel);
+        sentinel.next.prev = element;
+        sentinel.next = element;
+        size += 1;
+    }
+    @Override
+    public void addLast(T item) {
+        Node element = new Node(item, sentinel, sentinel.prev);
+        sentinel.prev.next = element;
+        sentinel.prev = element;
+        size += 1;
+    }
+    @Override
+    public int size() {
+        return this.size;
+    }
+    @Override
     public void printDeque() {
         if (!isEmpty()) {
             Node iter = sentinel.next;
@@ -63,6 +60,7 @@ public class LinkedListDeque<T> {
             System.out.println();
         }
     }
+    @Override
     public T removeFirst() {
         if (isEmpty()) {
             return null;
@@ -73,6 +71,7 @@ public class LinkedListDeque<T> {
         size--;
         return element.item;
     }
+    @Override
     public T removeLast() {
         if (isEmpty()) {
             return null;
@@ -83,6 +82,7 @@ public class LinkedListDeque<T> {
         size--;
         return element.item;
     }
+    @Override
     public T get(int index) {
         Node iter = sentinel.next;
         for(int i = 0; i < size; i++) {
