@@ -18,15 +18,23 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     public Iterator<T> iterator() {
         return new newIterator();
     }
-    public static final int ARRAY_SIZE = 8;
+    public static int ARRAY_SIZE = 8;
     public static final int RESIZE_FACTOR = 2;
-    private T[] items = (T[]) new Object[ARRAY_SIZE];
 
     private int nextStart;
     private int nextEnd;
     private int size;
 
+    private T[] items;
+
     public ArrayDeque() {
+        items = (T[]) new Object[ARRAY_SIZE];
+        nextStart = items.length - 1;
+        nextEnd = 0;
+        size = 0;
+    }
+    public ArrayDeque(int capacity) {
+        items = (T[]) new Object[capacity];
         nextStart = items.length - 1;
         nextEnd = 0;
         size = 0;
