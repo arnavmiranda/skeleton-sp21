@@ -11,8 +11,8 @@ public class ArrayDeque<T> {
     private int size;
 
     public ArrayDeque() {
-        nextStart = items.length / 2 - 1;
-        nextEnd = items.length / 2;
+        nextStart = items.length - 1;
+        nextEnd = 0;
         size = 0;
     }
 
@@ -145,7 +145,7 @@ public class ArrayDeque<T> {
         T item = items[first];
         items[first] = null;
         size--;
-        nextStart = first;  // Update nextStart to point to the new "first" position
+        nextStart = first;
         compress();
         return item;
     }
@@ -158,7 +158,7 @@ public class ArrayDeque<T> {
         T item = items[last];
         items[last] = null;
         size--;
-        nextEnd = last;  // Update nextEnd to point to the new "last" position
+        nextEnd = last;
         compress();
         return item;
     }
