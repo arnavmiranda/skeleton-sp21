@@ -10,7 +10,7 @@ RandomizedDequeTests {
     public void randomizedTest() {
         ArrayDeque<Integer> buggy = new ArrayDeque<>();
 
-        int N = 20000;
+        int N = 100000;
         int choice;
         for (int i = 0; i < N; i++) {
             choice = StdRandom.uniform(0, 6);
@@ -30,7 +30,8 @@ RandomizedDequeTests {
             }
             if (choice == 2) {
                 //get
-                int randVal = StdRandom.uniform(0, 10);
+                if(buggy.size() == 0) continue;
+                int randVal = StdRandom.uniform(0, buggy.size());
                 System.out.println(i + ") get index: " + randVal + ": " + buggy.get(randVal));
                 continue;
             }
@@ -50,7 +51,7 @@ RandomizedDequeTests {
                 //size
                 int size = buggy.size();
                 System.out.println(i + ") size: " + size);
-            }
+            } 
         }
     }
 }

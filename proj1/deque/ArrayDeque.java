@@ -11,8 +11,8 @@ public class ArrayDeque<T> {
     private int size;
 
     public ArrayDeque() {
-        nextStart = 3;
-        nextEnd = 4;
+        nextStart = items.length / 2 - 1;
+        nextEnd = items.length / 2;
         size = 0;
     }
 
@@ -71,6 +71,7 @@ public class ArrayDeque<T> {
     }
 
     private void resize(int capacity) {
+        if (size > capacity) return;
         if (!full()) return;
 
         T[] temp = (T[]) new Object[capacity];
@@ -129,45 +130,38 @@ public class ArrayDeque<T> {
     }
 
     public T get(int index) {
-        int start = start();
-        int last = items.length - 1;
-
-        if (isEmpty()) {
+        if (index < 0 || index >= size) {
             return null;
         }
-        if (index > size) {
-            return null;
-        }
-        if (start + index > last) {
-            return items[start + index - last];
-        }
-        return items[start + index];
+        int actualIndex = (start() + index) % items.length;
+        return items[actualIndex];
     }
 
     public T removeFirst() {
-        if(isEmpty()) {
+        if (isEmpty()) {
             return null;
         }
-        T item = items[start()];
-        items[start()] = null;
+        int first = start();
+        T item = items[first];
+        items[first] = null;
         size--;
-        nextStart = start();
+        nextStart = first;  // Update nextStart to point to the new "first" position
         compress();
         return item;
     }
 
     public T removeLast() {
-        if(isEmpty()) {
+        if (isEmpty()) {
             return null;
         }
-        T item = items[end()];
-        items[end()] = null;
+        int last = end();
+        T item = items[last];
+        items[last] = null;
         size--;
-        nextEnd = end();
+        nextEnd = last;  // Update nextEnd to point to the new "last" position
         compress();
         return item;
     }
-
     public void printDeque() {
         if (isEmpty()) {
             return;

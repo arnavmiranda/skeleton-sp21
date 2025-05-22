@@ -179,4 +179,21 @@ public class DequeTest {
 
     }
 
+    @Test
+    /* Add large number of elements to deque; check if order is correct. */
+    public void addgetTrial() {
+
+        //LinkedListDeque<Integer> lld1 = new LinkedListDeque<Integer>();
+        ArrayDeque<Integer> ad1 = new ArrayDeque<Integer>();
+        for (int i = 0; i < 20; i++) {
+            //lld1.addLast(i);
+            ad1.addLast(i);
+        }
+        for (int i = 0; i < 20; i++) {
+            int item = ad1.get(i);
+            assertEquals(item, i);
+            System.out.println(item + " " + i);
+        }
+    }
+
 }
