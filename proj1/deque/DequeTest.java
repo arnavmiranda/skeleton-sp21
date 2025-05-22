@@ -195,5 +195,4 @@ public class DequeTest {
             System.out.println(item + " " + i);
         }
     }
-
 }

@@ -1,7 +1,23 @@
 package deque;
+import java.util.Iterator;
 
-public class ArrayDeque<T> implements Deque<T>{
+public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
+    private class newIterator implements Iterator<T> {
+        private int pos;
+        public newIterator() {
+            pos = 0;
+        }
+        public boolean hasNext() {
+            return pos < size;
+        }
+        public T next() {
+            return get(pos++);
+        }
+    }
+    public Iterator<T> iterator() {
+        return new newIterator();
+    }
     public static final int ARRAY_SIZE = 8;
     public static final int RESIZE_FACTOR = 2;
     private T[] items = (T[]) new Object[ARRAY_SIZE];
