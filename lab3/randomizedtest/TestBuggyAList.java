@@ -7,7 +7,8 @@ import static org.junit.Assert.*;
 /**
  * Created by hug.
  */
-public class TestBuggyAList {
+public class
+TestBuggyAList {
 
     @Test
     public void testThreeAddRemove() {
