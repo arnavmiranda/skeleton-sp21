@@ -21,7 +21,7 @@ public class ArrayDeque<T> {
     }
 
     private int start() {
-        if (nextStart == items.length) {
+        if (nextStart == items.length - 1) {
             return 0;
         }
         return nextStart + 1;
@@ -29,7 +29,7 @@ public class ArrayDeque<T> {
 
     private int end() {
         if (nextEnd == 0) {
-            return items.length;
+            return items.length - 1;
         }
         return nextEnd - 1;
     }
@@ -54,11 +54,11 @@ public class ArrayDeque<T> {
         while (USAGE_RATIO < 0.25) {
             T[] temp = (T[]) new Object[length() / 2];
             int start = start();
-            if (startFromFirst()) {
-                System.arraycopy(items, 0, temp, 0, size);
+            if (start < end()) {
+                System.arraycopy(items, start, temp, 0, size);
             } else {
                 System.arraycopy(items, start, temp, 0, length() - start);
-                System.arraycopy(items, 0, temp, length() - start, start);
+                System.arraycopy(items, 0, temp, length() - start, size + start - length());
             }
             items = temp;
             nextStart = length() - 1;
