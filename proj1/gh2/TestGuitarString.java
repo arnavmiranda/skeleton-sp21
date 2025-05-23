@@ -14,7 +14,7 @@ public class TestGuitarString  {
 
     @Test
     public void testPluckTheAString() {
-        GuitarString aString = new GuitarString(GuitarHeroLite.CONCERT_A);
+        Drum aString = new Drum(220);
         aString.pluck();
         for (int i = 0; i < 100000; i += 1) {
             StdAudio.play(aString.sample());
