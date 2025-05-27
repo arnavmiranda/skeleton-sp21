@@ -137,7 +137,7 @@ public class MyHashMap<K, V> implements Map61B<K, V>, Iterable<K> {
         }
         for(int i = 0; i < length; i++) {
             for(Node node : buckets[i]) {
-                int hash = node.hashCode();
+                int hash = node.key.hashCode();
                 int index = reduce(hash, length * RESIZE_FACTOR);
                 temp[index].add(node);
             }
@@ -164,6 +164,9 @@ public class MyHashMap<K, V> implements Map61B<K, V>, Iterable<K> {
      */
     @Override
     public V get(K key){
+        if(size == 0) {
+            return null;
+        }
         int hash = key.hashCode();
         int index = reduce(hash, buckets.length);
         ArrayList<Node> bucket = (ArrayList<Node>) buckets[index];
@@ -189,13 +192,23 @@ public class MyHashMap<K, V> implements Map61B<K, V>, Iterable<K> {
     @Override
     public void put(K key, V value){
         Node node = createNode(key, value);
-        int hash = node.hashCode();
+        int hash = node.key.hashCode();
         int index = reduce(hash, buckets.length);
         ArrayList<Node> bucket = (ArrayList<Node>) buckets[index];
-        bucket.add(node);
-        size++;
-        if(resizeRequired()) {
-            resize();
+        if(!keySet.contains(key)) {
+            bucket.add(node);
+            size++;
+            keys.add(node.key);
+            keySet.add(node.key);
+            if (resizeRequired()) {
+                resize();
+            }
+        } else {
+            for(Node n : bucket) {
+                if(n.key == key) {
+                    n.value = value;
+                }
+            }
         }
     }
 
@@ -213,7 +226,7 @@ public class MyHashMap<K, V> implements Map61B<K, V>, Iterable<K> {
     public V remove(K key) {
         throw new UnsupportedOperationException();
     }
-    
+
     /**
      * Removes the entry for the specified key only if it is currently mapped to
      * the specified value. Not required for Lab 8. If you don't implement this,
