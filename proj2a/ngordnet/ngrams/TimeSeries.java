@@ -1,5 +1,7 @@
 package ngordnet.ngrams;
 
+import net.sf.saxon.functions.Minimax;
+
 import java.util.*;
 
 /**
@@ -12,7 +14,6 @@ public class TimeSeries extends TreeMap<Integer, Double> {
 
     private static final int MIN_YEAR = 1400;
     private static final int MAX_YEAR = 2100;
-    // TODO: Add any necessary static/instance variables.
 
     /**
      * Constructs a new empty TimeSeries.
@@ -27,9 +28,15 @@ public class TimeSeries extends TreeMap<Integer, Double> {
      */
     public TimeSeries(TimeSeries ts, int startYear, int endYear) {
         super();
+        if(startYear < MIN_YEAR) {
+            startYear = MIN_YEAR;
+        }
+        if(endYear > MAX_YEAR) {
+            endYear = MAX_YEAR;
+        }
         for(int year : ts.keySet()) {
             if(year >= startYear && year <= endYear) {
-                double value = get(year);
+                double value = ts.get(year);
                 super.put(year, value);
             }
         }
@@ -77,14 +84,14 @@ public class TimeSeries extends TreeMap<Integer, Double> {
         int end = Math.max(year1.getLast(), year2.getLast());
 
         for (int year = start; year <= end; year++) {
-            if(!year1.contains(year) && !year2.contains(year)) {
+            if(!a.containsKey(year) && !b.containsKey(year)) {
                 continue;
             }
-            if (!year1.contains(year)) {
+            if (!a.containsKey(year)) {
                 combined.put(year, b.get(year));
                 continue;
             }
-            if(!year2.contains(year)) {
+            if(!b.containsKey(year)) {
                 combined.put(year, a.get(year));
                 continue;
             }
@@ -93,9 +100,17 @@ public class TimeSeries extends TreeMap<Integer, Double> {
         }
         return combined;
     }
+
     public TimeSeries plus(TimeSeries ts) {
         if(this.isEmpty() && ts.isEmpty()) {
             return new TimeSeries();
+        }
+        if(this.isEmpty()) {
+
+        }
+        if(ts.isEmpty()) {
+            List<Integer> years = this.years();
+            return new TimeSeries(this, years.getFirst(), years.getLast());
         }
         return combineTimeSeries(this, ts);
     }
@@ -119,13 +134,13 @@ public class TimeSeries extends TreeMap<Integer, Double> {
         int end = Math.max(year1.getLast(), year2.getLast());
 
         for (int year = start; year <= end; year++) {
-            if(!year1.contains(year) && !year2.contains(year)) {
+            if(!a.containsKey(year) && !b.containsKey(year)) {
                 continue;
             }
-            if (!year1.contains(year)) {
+            if (!a.containsKey(year)) {
                 continue;
             }
-            if(!year2.contains(year)) {
+            if(!b.containsKey(year)) {
                 throw new IllegalArgumentException();
             }
             double quotient = a.get(year) / b.get(year);
@@ -134,7 +149,7 @@ public class TimeSeries extends TreeMap<Integer, Double> {
         return divided;
     }
     public TimeSeries dividedBy(TimeSeries ts) {
-        if(this.isEmpty() && ts.isEmpty()) {
+        if(this.isEmpty() || ts.isEmpty()) {
             return new TimeSeries();
         }
         return divideTimeSeries(this, ts);
