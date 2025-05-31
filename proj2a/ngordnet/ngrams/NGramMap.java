@@ -1,6 +1,9 @@
 package ngordnet.ngrams;
 
+import edu.princeton.cs.introcs.In;
+
 import java.util.Collection;
+import java.util.LinkedList;
 
 /**
  * An object that provides utility methods for making queries on the
@@ -16,13 +19,43 @@ public class NGramMap {
 
     private static final int MIN_YEAR = 1400;
     private static final int MAX_YEAR = 2100;
-    // TODO: Add any necessary static/instance variables.
+
+    private static final int hashSize = 100000;
 
     /**
      * Constructs an NGramMap from WORDSFILENAME and COUNTSFILENAME.
+     *
+     * METHOD:
+     * 1) create HASHMAP of buckets, with each bucket storing multiple TimeSeries (each one containing the data of one word)
+     * 2) sort through csv file, only processing first 3 data entries per row
+     *    - store a temp string variable to keep track of which word you're on, and compare through each iteration to see if word switched
+     *    - for every word, make unique string hashcode and then reduce it and store the value through the iterations
+     *    - store that particular row of data into the word's hash bucket, iterating to find the item corresponding to our word, which then connects to
+     *      the TimeSeries of that word (pair-like data structure with car = string of word and cdr = timeseries ?)
+     *    - any word's data at any point can be accessed by calculating its hash index, finding the corresponding bucket, iterating through the list to
+     *      search for the correct pair's car value which is the string to be compared (use isEqual() method for string) and then iterate through its
+     *      cdr time series value and look for the year.
      */
     public NGramMap(String wordsFilename, String countsFilename) {
-        // TODO: Fill in this constructor. See the "NGramMap Tips" section of the spec for help.
+        In words = new In(wordsFilename);
+        In counts = new In(countsFilename);
+
+        class Word {
+            String word;
+            TimeSeries ts;
+        }
+        class Bucket {
+            LinkedList<Word> bucket = new LinkedList<>();
+        }
+
+
+    }
+
+
+    private int hashIndex(String word) {
+        int hash = word.hashCode();
+        hash = Math.floorMod(hash, hashSize);
+        return hash;
     }
 
     /**
@@ -43,8 +76,7 @@ public class NGramMap {
      * NGramMap. This is also known as a "defensive copy".
      */
     public TimeSeries countHistory(String word) {
-        // TODO: Fill in this method.
-        return null;
+        return countHistory(word, MIN_YEAR, MAX_YEAR);
     }
 
     /**
