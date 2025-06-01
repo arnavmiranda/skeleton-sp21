@@ -21,12 +21,27 @@ public class NGramMap {
     private static final int MAX_YEAR = 2100;
 
     private static final int hashSize = 100000;
+    private Bucket[] hashtable = new Bucket[hashSize];
+
+    private class Word {
+        String word;
+        TimeSeries ts;
+
+        Word(String name) {
+            word = name;
+            ts = new TimeSeries();
+        }
+    }
+
+    private class Bucket {
+        LinkedList<Word> bucket = new LinkedList<>();
+    }
 
     /**
      * Constructs an NGramMap from WORDSFILENAME and COUNTSFILENAME.
      *
      * METHOD:
-     * 1) create HASHMAP of buckets, with each bucket storing multiple TimeSeries (each one containing the data of one word)
+     * 1) create HASHMAP of buckets, with each bucket storing multiple Words: which contain the data of TimeSeries (each one containing the data of one word)
      * 2) sort through csv file, only processing first 3 data entries per row
      *    - store a temp string variable to keep track of which word you're on, and compare through each iteration to see if word switched
      *    - for every word, make unique string hashcode and then reduce it and store the value through the iterations
@@ -40,13 +55,39 @@ public class NGramMap {
         In words = new In(wordsFilename);
         In counts = new In(countsFilename);
 
-        class Word {
-            String word;
-            TimeSeries ts;
+        String first;
+        int second;
+        double third;
+        double fourth;
+
+        String temp = "";
+        int tempIndex = -1;
+
+        while(!words.isEmpty()) {
+            first = words.readString();
+            second = words.readInt();
+            third = words.readDouble();
+            fourth = words.readDouble();
+
+            if(temp.equals(first)) {
+                Bucket thatbucket = hashtable[tempIndex];
+                Word word = thatbucket.bucket.getLast();
+                word.ts.put(second, third);
+            } else {
+                temp = first;
+                tempIndex = hashIndex(first);
+                Word word = new Word(first);
+                word.ts.put(second, third);
+
+                Bucket thatbucket = hashtable[tempIndex];
+                if(thatbucket == null) {
+                    thatbucket = new Bucket();
+                }
+                thatbucket.bucket.addLast(word);
+            }
+
         }
-        class Bucket {
-            LinkedList<Word> bucket = new LinkedList<>();
-        }
+
 
 
     }
@@ -57,6 +98,7 @@ public class NGramMap {
         hash = Math.floorMod(hash, hashSize);
         return hash;
     }
+
 
     /**
      * Provides the history of WORD between STARTYEAR and ENDYEAR, inclusive of both ends. The
