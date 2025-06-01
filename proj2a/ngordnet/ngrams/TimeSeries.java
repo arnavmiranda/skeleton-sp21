@@ -76,6 +76,17 @@ public class TimeSeries extends TreeMap<Integer, Double> {
      * should store the value from the TimeSeries that contains that year.
      */
     private TimeSeries combineTimeSeries(TimeSeries a, TimeSeries b) {
+
+        if(a.isEmpty() && b.isEmpty()) {
+            return new TimeSeries();
+        }
+        if(a.isEmpty()) {
+            return new TimeSeries(b, MIN_YEAR, MAX_YEAR);
+        }
+        if(b.isEmpty()) {
+            return new TimeSeries(a, MIN_YEAR, MAX_YEAR);
+        }
+
         TimeSeries combined = new TimeSeries();
         List<Integer> year1 = a.years();
         List<Integer> year2 = b.years();
@@ -106,7 +117,8 @@ public class TimeSeries extends TreeMap<Integer, Double> {
             return new TimeSeries();
         }
         if(this.isEmpty()) {
-
+            List<Integer> years = ts.years();
+            return new TimeSeries(ts, years.getFirst(), years.getLast());
         }
         if(ts.isEmpty()) {
             List<Integer> years = this.years();

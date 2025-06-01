@@ -125,7 +125,7 @@ public class NGramMap {
                 return new TimeSeries(eachword.ts, startYear, endYear);
             }
         }
-        return null;
+        return new TimeSeries();
     }
 
     /**
@@ -172,7 +172,8 @@ public class NGramMap {
     public TimeSeries summedWeightHistory(Collection<String> words, int startYear, int endYear) {
         TimeSeries sum = new TimeSeries();
         for(String name : words) {
-            sum.plus(weightHistory(name, startYear, endYear));
+            TimeSeries ts = weightHistory(name, startYear, endYear);
+            sum = sum.plus(ts);
         }
         return sum;
     }

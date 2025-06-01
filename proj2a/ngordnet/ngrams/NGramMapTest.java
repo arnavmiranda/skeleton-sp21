@@ -44,8 +44,7 @@ public class NGramMapTest {
     @Test
     public void testOnLargeFile() {
         // creates an NGramMap from a large dataset
-        NGramMap ngm = new NGramMap("./data/ngrams/top_14377_words.csv",
-                "./data/ngrams/total_counts.csv");
+        NGramMap ngm = new NGramMap("./data/ngrams/top_14377_words.csv", "./data/ngrams/total_counts.csv");
 
         // returns the count of the number of occurrences of fish per year between 1850 and 1933.
         TimeSeries fishCount = ngm.countHistory("fish", 1850, 1933);
@@ -69,6 +68,35 @@ public class NGramMapTest {
 
         double expectedFishPlusDogWeight1865 = (136497.0 + 75819.0) / 2563919231.0;
         assertThat(fishPlusDogWeight.get(1865)).isWithin(1E-10).of(expectedFishPlusDogWeight1865);
+    }
+
+    @Test
+    public void testOnSmallFile() {
+        // creates an NGramMap from a large dataset
+        NGramMap ngm = new NGramMap("./data/ngrams/words_that_start_with_q.csv", "./data/ngrams/total_counts.csv");
+
+        // returns the count of the number of occurrences of quarter per year between 1850 and 1933.
+        TimeSeries quarterCount = ngm.countHistory("quarter", 1850, 1933);
+        assertThat(quarterCount.get(1865)).isWithin(1E-10).of(28746.0);
+        assertThat(quarterCount.get(1922)).isWithin(1E-10).of(65671.0);
+
+        TimeSeries totalCounts = ngm.totalCountHistory();
+        assertThat(totalCounts.get(1865)).isWithin(1E-10).of(2563919231.0);
+
+        // returns the relative weight of the word quarter in each year between 1850 and 1933.
+        TimeSeries quarterWeight = ngm.weightHistory("quarter", 1850, 1933);
+        assertThat(quarterWeight.get(1865)).isWithin(1E-7).of(28746.0/2563919231.0);
+
+        TimeSeries questionCount = ngm.countHistory("question", 1850, 1876);
+        assertThat(questionCount.get(1865)).isWithin(1E-10).of(123147.0);
+
+        List<String> quarterAndQuestion = new ArrayList<>();
+        quarterAndQuestion.add("quarter");
+        quarterAndQuestion.add("question");
+        TimeSeries quarterAndQuestionWeight = ngm.summedWeightHistory(quarterAndQuestion, 1865, 1866);
+
+        double expectedQuarterAndQuestionWeight1865 = (28746.0 + 123147.0) / 2563919231.0;
+        assertThat(quarterAndQuestionWeight.get(1865)).isWithin(1E-10).of(expectedQuarterAndQuestionWeight1865);
     }
 
 }  
