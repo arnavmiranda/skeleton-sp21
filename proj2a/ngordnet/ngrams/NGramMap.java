@@ -86,6 +86,7 @@ public class NGramMap {
                 Bucket thatbucket = hashtable[tempIndex];
                 if(thatbucket == null) {
                     thatbucket = new Bucket();
+                    hashtable[tempIndex] = thatbucket;
                 }
                 thatbucket.bucket.addLast(word);
             }
@@ -95,15 +96,17 @@ public class NGramMap {
 
         int a;
         double b;
+        String line;
+        String[] splitline;
 
         while(!counts.isEmpty()) {
-            a = counts.readInt();
-            b = counts.readDouble();
-            counts.readDouble();
-            counts.readDouble();
-
+            line = counts.readLine();
+            splitline = line.split(",");
+            a = Integer.parseInt(splitline[0]);
+            b = Double.parseDouble(splitline[1]);
             countData.put(a, b);
         }
+        counts.close();
     }
 
 
@@ -139,8 +142,7 @@ public class NGramMap {
      * Returns a defensive copy of the total number of words recorded per year in all volumes.
      */
     public TimeSeries totalCountHistory() {
-        // TODO: Fill in this method.
-        return null;
+        return new TimeSeries(countData, MIN_YEAR, MAX_YEAR);
     }
 
     /**
@@ -148,8 +150,9 @@ public class NGramMap {
      * and ENDYEAR, inclusive of both ends.
      */
     public TimeSeries weightHistory(String word, int startYear, int endYear) {
-        // TODO: Fill in this method.
-        return null;
+        TimeSeries numerator = countHistory(word, startYear, endYear);
+        TimeSeries denominator = totalCountHistory();
+        return numerator.dividedBy(denominator);
     }
 
     /**
@@ -158,8 +161,7 @@ public class NGramMap {
      * TimeSeries.
      */
     public TimeSeries weightHistory(String word) {
-        // TODO: Fill in this method.
-        return null;
+        return weightHistory(word, MIN_YEAR, MAX_YEAR);
     }
 
     /**
@@ -167,20 +169,18 @@ public class NGramMap {
      * between STARTYEAR and ENDYEAR, inclusive of both ends. If a word does not exist in
      * this time frame, ignore it rather than throwing an exception.
      */
-    public TimeSeries summedWeightHistory(Collection<String> words,
-                                          int startYear, int endYear) {
-        // TODO: Fill in this method.
-        return null;
+    public TimeSeries summedWeightHistory(Collection<String> words, int startYear, int endYear) {
+        TimeSeries sum = new TimeSeries();
+        for(String name : words) {
+            sum.plus(weightHistory(name, startYear, endYear));
+        }
+        return sum;
     }
 
     /**
      * Returns the summed relative frequency per year of all words in WORDS.
      */
     public TimeSeries summedWeightHistory(Collection<String> words) {
-        // TODO: Fill in this method.
-        return null;
+        return summedWeightHistory(words, MIN_YEAR, MAX_YEAR);
     }
-
-    // TODO: Add any private helper methods.
-    // TODO: Remove all TODO comments before submitting.
 }
