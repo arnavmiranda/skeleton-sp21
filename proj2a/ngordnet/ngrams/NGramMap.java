@@ -22,13 +22,14 @@ public class NGramMap {
 
     private static final int hashSize = 100000;
     private Bucket[] hashtable = new Bucket[hashSize];
+    private TimeSeries countData = new TimeSeries();
 
     private class Word {
-        String word;
+        String name;
         TimeSeries ts;
 
         Word(String name) {
-            word = name;
+            this.name = name;
             ts = new TimeSeries();
         }
     }
@@ -37,6 +38,11 @@ public class NGramMap {
         LinkedList<Word> bucket = new LinkedList<>();
     }
 
+    private int hashIndex(String word) {
+        int hash = word.hashCode();
+        hash = Math.floorMod(hash, hashSize);
+        return hash;
+    }
     /**
      * Constructs an NGramMap from WORDSFILENAME and COUNTSFILENAME.
      *
@@ -53,12 +59,10 @@ public class NGramMap {
      */
     public NGramMap(String wordsFilename, String countsFilename) {
         In words = new In(wordsFilename);
-        In counts = new In(countsFilename);
 
         String first;
         int second;
         double third;
-        double fourth;
 
         String temp = "";
         int tempIndex = -1;
@@ -67,7 +71,7 @@ public class NGramMap {
             first = words.readString();
             second = words.readInt();
             third = words.readDouble();
-            fourth = words.readDouble();
+            words.readDouble();
 
             if(temp.equals(first)) {
                 Bucket thatbucket = hashtable[tempIndex];
@@ -85,19 +89,23 @@ public class NGramMap {
                 }
                 thatbucket.bucket.addLast(word);
             }
-
         }
+        words.close();
+        In counts = new In(countsFilename);
 
+        int a;
+        double b;
 
+        while(!counts.isEmpty()) {
+            a = counts.readInt();
+            b = counts.readDouble();
+            counts.readDouble();
+            counts.readDouble();
 
+            countData.put(a, b);
+        }
     }
 
-
-    private int hashIndex(String word) {
-        int hash = word.hashCode();
-        hash = Math.floorMod(hash, hashSize);
-        return hash;
-    }
 
 
     /**
@@ -107,7 +115,13 @@ public class NGramMap {
      * NGramMap. This is also known as a "defensive copy".
      */
     public TimeSeries countHistory(String word, int startYear, int endYear) {
-        // TODO: Fill in this method.
+        int index = hashIndex(word);
+        Bucket thisbucket = hashtable[index];
+        for(Word eachword : thisbucket.bucket) {
+            if(eachword.name.equals(word)) {
+                return new TimeSeries(eachword.ts, startYear, endYear);
+            }
+        }
         return null;
     }
 
