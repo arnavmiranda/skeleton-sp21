@@ -16,8 +16,13 @@ public class Graph {
         intList neighbors = adjList.get(from);
         neighbors.addLast(to);
     }
-    public Iterator<Integer> adj(int i) {
-        return (Iterator<Integer>) adjList.get(i);
+    public LinkedList<Integer> adj(int i) {
+        return adjList.get(i);
     }
-
+    public void children(TreeSet<Integer> L, int id) {
+        for(int i : adj(id)) {
+            L.add(i);
+            children(L, i);
+        }
+    }
 }

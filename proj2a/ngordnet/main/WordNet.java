@@ -6,7 +6,7 @@ import java.util.*;
 
 public class WordNet {
     private Graph graph;
-    private TreeMap<String, Node> wordKeyDictionary;
+    private TreeMap<String, ListOfNodes> wordKeyDictionary;
     private TreeMap<Integer, Node> idKeyDictionary;
 
     private class Node {
@@ -18,6 +18,7 @@ public class WordNet {
             this.name = name;
         }
     }
+    private class ListOfNodes extends LinkedList<Node>{ }
 
     public WordNet(String synFile, String hypFile) {
         graph = new Graph();
@@ -32,6 +33,7 @@ public class WordNet {
         int id;
         String synset;
         String[] terms;
+        ListOfNodes nodeList;
 
         while (!syn.isEmpty()) {
             line = syn.readLine();
@@ -45,10 +47,24 @@ public class WordNet {
             if (synset.contains(" ")) {
                 terms = synset.split(" ");
                 for (String word : terms) {
-                    wordKeyDictionary.put(word, node);
+                    if(wordKeyDictionary.containsKey(word)) {
+                        nodeList = wordKeyDictionary.get(word);
+                        nodeList.add(node);
+                    } else {
+                        nodeList = new ListOfNodes();
+                        nodeList.add(node);
+                        wordKeyDictionary.put(word, nodeList);
+                    }
                 }
             } else {
-                wordKeyDictionary.put(synset, node);
+                if(wordKeyDictionary.containsKey(synset)) {
+                    nodeList = wordKeyDictionary.get(synset);
+                    nodeList.add(node);
+                } else {
+                    nodeList = new ListOfNodes();
+                    nodeList.add(node);
+                    wordKeyDictionary.put(synset, nodeList);
+                }
             }
         }
         syn.close();
@@ -68,7 +84,37 @@ public class WordNet {
         }
     }
 
-    /* NOW DEVISE METHODS THAT THE WORD NET INSTANCE CALLED BY HYPONYM HANDLER SHOULD USE */
+    private void spliceAdd(String string, TreeSet<String> treeset) {
+        if(string.contains(" ")) {
+            for(String name : string.split(" ")) {
+                treeset.add(name);
+            }
+        } else {
+            treeset.add(string);
+        }
+    }
 
+    public LinkedList<String> stringHyponyms(String word) {
+        ListOfNodes nodeList = wordKeyDictionary.get(word);
+        TreeSet<Integer> treeset = new TreeSet<>();
+        TreeSet<String> stringTreeset = new TreeSet<>();
+        String string, n;
+        int id;
+        for(Node node : nodeList) {
+            n = node.name;
+            spliceAdd(n, stringTreeset);
+            id = node.id;
+            graph.children(treeset, id);
+            for (int i : treeset) {
+                string = idKeyDictionary.get(i).name;
+                spliceAdd(string, stringTreeset);
+            }
+        }
+        LinkedList<String> llist = new LinkedList<>();
+        for(String s : stringTreeset) {
+            llist.addLast(s);
+        }
+        return llist;
+    }
 }
 
