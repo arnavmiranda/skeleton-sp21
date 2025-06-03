@@ -94,6 +94,43 @@ public class WordNet {
         }
     }
 
+    private void addToSet(List<String> L, Set<String> S) {
+        for(String s : L) {
+            S.add(s);
+        }
+    }
+    public LinkedList<String> stringHyponyms(List<String> words) {
+        if(words.size() == 1) {
+            return stringHyponyms(words.getFirst());
+        }
+        TreeSet<String> set = new TreeSet<>();
+        TreeSet<String> newset;
+
+        LinkedList<String> hyponyms;
+
+        for(int i = 0; i < words.size(); i++) {
+            String string = words.get(i);
+            if(i == 0) {
+                addToSet(stringHyponyms(string), set);
+                continue;
+            }
+            newset = new TreeSet<>();
+            for(String word : stringHyponyms(string)) {
+                if(set.contains(word)) {
+                    newset.add(word);
+                }
+            }
+            set = newset;
+        }
+
+        LinkedList<String> llist = new LinkedList<>();
+        for(String s : set) {
+            llist.addLast(s);
+        }
+        return llist;
+    }
+
+
     public LinkedList<String> stringHyponyms(String word) {
         ListOfNodes nodeList = wordKeyDictionary.get(word);
         TreeSet<Integer> treeset = new TreeSet<>();

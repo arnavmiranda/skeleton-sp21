@@ -19,8 +19,7 @@ public class HyponymHandler extends NgordnetQueryHandler {
     public String handle(NgordnetQuery q) {
         List<String> words = q.words();
 
-        String word = words.getFirst();
-        LinkedList<String> llist = wn.stringHyponyms(word);
+        LinkedList<String> llist = wn.stringHyponyms(words);
         int startYear = q.startYear();
         int endYear = q.endYear();
 
