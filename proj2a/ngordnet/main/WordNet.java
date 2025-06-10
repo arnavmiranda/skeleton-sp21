@@ -100,6 +100,9 @@ public class WordNet {
         }
     }
     public LinkedList<String> stringHyponyms(List<String> words) {
+        if(words.isEmpty()) {
+            return new LinkedList<>();
+        }
         if(words.size() == 1) {
             return stringHyponyms(words.getFirst());
         }
@@ -133,6 +136,9 @@ public class WordNet {
 
     public LinkedList<String> stringHyponyms(String word) {
         ListOfNodes nodeList = wordKeyDictionary.get(word);
+        if(word == null) {
+            return new LinkedList<>();
+        }
         TreeSet<Integer> treeset = new TreeSet<>();
         TreeSet<String> stringTreeset = new TreeSet<>();
         String string, n;

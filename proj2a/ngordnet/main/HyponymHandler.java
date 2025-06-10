@@ -14,7 +14,7 @@ public class HyponymHandler extends NgordnetQueryHandler {
     public class MaxHeapComparator implements Comparator<countWord> {
         @Override
         public int compare(countWord o1, countWord o2) {
-            return o2.count - o1.count;
+            return (int) (o2.count - o1.count);
         }
     }
 
@@ -24,8 +24,11 @@ public class HyponymHandler extends NgordnetQueryHandler {
         this.map = map;
     }
 
-    private int totalCount(TimeSeries ts, int start, int end) {
-        int sum = 0;
+    private double totalCount(TimeSeries ts, int start, int end) {
+        if(ts == null) {
+            return 0.0;
+        }
+        double sum = 0.0;
         for(int year = start; year <= end; year++) {
             if(!ts.containsKey(year)) {
                 continue;
@@ -37,8 +40,8 @@ public class HyponymHandler extends NgordnetQueryHandler {
 
     public class countWord {
         String name;
-        int count;
-        countWord(int num, String word) {
+        double count;
+        countWord(double num, String word) {
             name = word;
             count = num;
         }
@@ -47,14 +50,19 @@ public class HyponymHandler extends NgordnetQueryHandler {
         LinkedList<String> finalList = new LinkedList<>();
         PriorityQueue<countWord> maxHeap = new PriorityQueue<>(new MaxHeapComparator());
 
-        int count;
+        double count;
         countWord node;
+        TimeSeries ts;
+
         for(String word : L) {
             count = totalCount(map.weightHistory(word), start, end);
             node = new countWord(count, word);
             maxHeap.add(node);
         }
         for(int i = 0; i < k; i++) {
+            if (maxHeap.isEmpty()) {
+                break;
+            }
             finalList.addLast(maxHeap.poll().name);
         }
         return finalList;
