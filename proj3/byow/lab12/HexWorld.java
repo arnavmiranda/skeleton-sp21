@@ -89,7 +89,8 @@ public class HexWorld {
             return;
         }
         if(num > 0) {
-            addHexagon(tiles, startPos, randomBiome(), size);
+            TETile tile = TETile.colorVariant(randomBiome(), 50, 50, 50, RANDOM);
+            addHexagon(tiles, startPos, tile, size);
             Position bottomPos = getBottomNeighbor(startPos, size);
             addHexColumn(tiles, bottomPos, size, num - 1);
         }
