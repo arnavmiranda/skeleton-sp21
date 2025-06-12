@@ -12,6 +12,7 @@ public class Engine {
     public static int seed;
     public static Random random;
     public static TETile[][] tiles;
+    public static final int SAFETY_FACTOR = 1;
 
     public static int[] quickFind;
     public static TreeMap<Integer, Room> roomMap = new TreeMap<>();
@@ -106,12 +107,24 @@ public class Engine {
     }
 
     public void connectRooms() {
-
             int a = random.nextInt(roomCount());
             int b = random.nextInt(roomCount());
+            System.out.println(a + " " +  b);
+
+            if(quickFind[a] == quickFind[b]) {
+                return;
+            }
             if(a == b) return;
             Room first = roomMap.get(a);
+//            if(first.entryPoints().isEmpty()) {
+//                System.out.println(first);
+//                return;
+//            }
             Room second = roomMap.get(b);
+//            if(second.entryPoints().isEmpty()) {
+//                System.out.println(second);
+//                return;
+//            }
             for(Position start : first.entryPoints()) {
                 for(Position end: second.entryPoints()) {
                     if(straightPathPossible(start, end)) {
@@ -128,8 +141,6 @@ public class Engine {
                 }
             }
         }
-
-
 
     public int roomCount() {
         return roomMap.size();
@@ -173,16 +184,16 @@ public class Engine {
         int l = room.left;
         int r = room.right;
 
-        if (y + h > height - 1) {
+        if (y + h >= height - 1) {
             room.height = height - 1 - y;
         }
-        if (y - d < 1) {
+        if (y - d <= 1) {
             room.depth = y - 1;
         }
-        if (x + r > width - 1) {
+        if (x + r >= width - 1) {
             room.right = width - 1 - x;
         }
-        if (x - l < 1) {
+        if (x - l <= 1) {
             room.left = x - 1;
         }
     }
@@ -220,10 +231,15 @@ public class Engine {
             this.y = y;
         }
         public Position() {
-            int x = random.nextInt(WIDTH);
-            int y = random.nextInt(HEIGHT);
-            this.x = x;
-            this.y = y;
+            int a = 0, b = 0;
+            while(a == 0) {
+                a = random.nextInt(WIDTH);
+            }
+            while(b == 0) {
+                b = random.nextInt(HEIGHT);
+            }
+            x = a;
+            y = b;
         }
 
         public int x() {
@@ -235,6 +251,12 @@ public class Engine {
         }
 
         public Position shift(int dx, int dy) {
+            if(x + dx >= WIDTH) {
+                dx = WIDTH - x - 1;
+            }
+            if(y + dy >= HEIGHT) {
+                dy = HEIGHT - y - 1;
+            }
             return new Position(x + dx, y + dy);
         }
     }
@@ -279,32 +301,43 @@ public class Engine {
             }
         }
 
+        private int horizontalRange() {
+            int x;
+            while (true) {
+                x = random.nextInt(node.x() + right);
+                if (x > node.x() - left) {
+                    return x;
+                }
+            }
+        }
+        private int verticalRange() {
+            int y;
+            while (true) {
+                y = random.nextInt(node.y() + height);
+                if (y > node.y() - depth) {
+                    return y;
+                }
+            }
+        }
         public LinkedList<Position> entryPoints() {
-
-            int xRange = Math.min(left, right);
-            int xOffset = xRange > 0 ? random.nextInt(xRange * 2 + 1) - xRange : 0;
-            Position upperEntrance = node.shift(xOffset, height + 1);
-            Position lowerEntrance = node.shift(xOffset, -(depth + 1));
-
-            int yRange = Math.min(height, depth);
-            int yOffset = yRange > 0 ? random.nextInt(yRange * 2 + 1) - yRange : 0;
-            Position rightEntrance = node.shift(right + 1, yOffset);
-            Position leftEntrance = node.shift(-(left + 1), yOffset);
-
             LinkedList<Position> L = new LinkedList<>();
-            if(node.y() + height + 3 < HEIGHT) {
+            Position upperEntrance = node.shift(horizontalRange(), height  + 1);
+            Position lowerEntrance = node.shift(horizontalRange(), depth - 1);
+            Position leftEntrance = node.shift(node.x() - left - 1, verticalRange());
+            Position rightEntrance = node.shift(node.x() + right + 1, verticalRange());
+
+            if(node.y() + height + SAFETY_FACTOR < HEIGHT) {
                 L.add(upperEntrance);
             }
-            if(node.y() - depth - 3 > 0) {
+            if(node.y() - depth - SAFETY_FACTOR > 0) {
                 L.add(lowerEntrance);
             }
-            if(node.x() + right + 3 > WIDTH) {
+            if(node.x() + right + SAFETY_FACTOR < WIDTH) {
                 L.add(rightEntrance);
             }
-            if(node.x() - left - 3 > 0) {
+            if(node.x() - left - SAFETY_FACTOR > 0) {
                 L.add(leftEntrance);
             }
-            if(L.isEmpty()) return null;
 
             for(int i = 0; i < 2 * L.size(); i++) {
                 int id = random.nextInt(L.size());
@@ -315,26 +348,6 @@ public class Engine {
             return L;
         }
     }
-
-    public String wallDirection(Position p, Room room) throws Exception {
-        Position c = room.node;
-        int dx = p.x() - c.x();
-        int dy = p.y() - c.y();
-        if (Math.abs(dx) == room.right + 1 && dx > 0) {
-            return "right";
-        }
-        if (Math.abs(dx) == room.left + 1 && dx < 0) {
-            return "left";
-        }
-        if (Math.abs(dy) == room.height + 1 && dy > 0) {
-            return "up";
-        }
-        if (Math.abs(dy) == room.depth + 1 && dy < 0) {
-            return "down";
-        }
-        else throw new Exception("if-else error on method: wallDirection");
-    }
-
     public boolean straightPathPossible(Position a, Position b) {
         int dx = b.x() - a.x();
         int dy = b.y() - a.y();
@@ -348,8 +361,12 @@ public class Engine {
     }
 
     private boolean checkVerticalPath(Position a, Position b) {
+        //entrance node should be the wall entrance
         Position up = b.y() > a.y() ? b : a;
         Position down = b.y() > a.y() ? a : b;
+        if(down.x() + 1 >= WIDTH || down.x() - 1 < 0) {
+            return false;
+        }
         for(int x = down.x() - 1; x <= down.x() + 1; x++) {
             for(int y = down.y() + 1; y < up.y(); y++) {
                 if(tiles[x][y] != Tileset.NOTHING) {
@@ -374,6 +391,9 @@ public class Engine {
     private boolean checkHorizontalPath(Position a, Position b) {
         Position right = b.x() > a.x() ? b : a;
         Position left = b.x() > a.x() ? a : b;
+        if(left.y() + 1 >= HEIGHT || left.y() - 1 < 0) {
+            return false;
+        }
         for(int y = left.y() - 1; y <= left.y() + 1; y++) {
             for(int x = left.x() + 1; x < right.x(); x++) {
                 if(tiles[x][y] != Tileset.NOTHING) {
