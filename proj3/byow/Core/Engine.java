@@ -13,15 +13,16 @@ public class Engine {
     public static Random random;
     public static TETile[][] tiles;
     public static final int SAFETY_FACTOR = 3;
-    public static final int HEIGHT_FACTOR = 7;
-    public static final int WIDTH_FACTOR = 7;
+    public static final int HEIGHT_FACTOR = HEIGHT / 5;
+    public static final int WIDTH_FACTOR = WIDTH / 10;
     public static final int HALLWAY_COLOR = 50;
     public static int[] quickFind;
     public static TreeMap<Integer, Room> roomMap = new TreeMap<>();
+    private static int counter;
 
     public int determineNumberOfRooms(int height, int width) {
         int area = height * width;
-        return area / 300;
+            return area / 100;
     }
 
     /**
@@ -68,10 +69,13 @@ public class Engine {
         seed = extractSeed(input);
         random = new Random(seed);
 
+        counter = 0;
         drawRooms();
         initializeDS();
 
-        while(!allRoomsConnected()) {
+        counter = 0;
+        while (!allRoomsConnected()) {
+            if(counter > 10000) break;
             connectRooms();
         }
         ter.renderFrame(tiles);
@@ -91,22 +95,27 @@ public class Engine {
         int num = determineNumberOfRooms(HEIGHT, WIDTH);
         while (num > 0) {
 
+            if(counter > 10000) {
+                break;
+            }
             //default constructor generates random position WITHIN the grid (not boundary)
             Position p = new Position();
             Room room = new Room(p);
-            room.height = 3 + random.nextInt(HEIGHT_FACTOR);
-            room.depth = 3 + random.nextInt(HEIGHT_FACTOR);
-            room.left = 3 + random.nextInt(WIDTH_FACTOR);
-            room.right = 3 + random.nextInt(WIDTH_FACTOR);
+            room.height = 1 + random.nextInt(HEIGHT_FACTOR);
+            room.depth = 1 + random.nextInt(HEIGHT_FACTOR);
+            room.left = 1 + random.nextInt(WIDTH_FACTOR);
+            room.right = 1 + random.nextInt(WIDTH_FACTOR);
 
             fitRoom(room, tiles);
             if (roomOverlap(room, tiles)) {
+                counter++;
                 continue;
             }
             room.putFloor(tiles);
             room.putWall(tiles);
             num = num - 1;
             roomMap.put(c++, room);
+            counter = 0;
         }
     }
 
@@ -120,37 +129,40 @@ public class Engine {
     }
 
     public void connectRooms() {
-            int a = random.nextInt(roomCount());
-            int b = random.nextInt(roomCount());
-            System.out.println(a + " " +  b);
-            if(quickFind[a] == quickFind[b]) {
-                return;
-            }
+        int a = random.nextInt(roomCount());
+        int b = random.nextInt(roomCount());
+        System.out.println(a + " " + b);
+        if (quickFind[a] == quickFind[b]) {
+            return;
+        }
 
-            Room first = roomMap.get(a);
-            Room second = roomMap.get(b);
+        Room first = roomMap.get(a);
+        Room second = roomMap.get(b);
 
-            for(Position start : first.entryPoints()) {
-                for(Position end: second.entryPoints()) {
-                    if(straightPathPossible(start, end)) {
-                        makeStraightPath(start, end);
-                        combine(a,b);
+        for (Position start : first.entryPoints()) {
+            for (Position end : second.entryPoints()) {
+                if (straightPathPossible(start, end)) {
+                    makeStraightPath(start, end);
+                    combine(a, b);
+                    counter = 0;
+                    return;
+                } else {
+                    boolean adjust = random.nextBoolean();
+                    if (adjust) return;
+                    adjust = random.nextBoolean();
+                    if (adjust) return;
+                    Position corner = LpathPossible(start, end);
+                    if (corner != null) {
+                        makeLpath(start, end, corner);
+                        combine(a, b);
+                        counter = 0;
                         return;
-                    } else {
-                        boolean adjust = random.nextBoolean();
-                        if(adjust) return;
-                        adjust = random.nextBoolean();
-                        if(adjust) return;
-                        Position corner = LpathPossible(start, end);
-                        if(corner != null) {
-                            makeLpath(start, end, corner);
-                            combine(a,b);
-                            return;
-                        }
                     }
                 }
             }
         }
+        counter++;
+    }
 
     private void makeStraightPath(Position a, Position b) {
         int dx = b.x() - a.x();
@@ -204,7 +216,7 @@ public class Engine {
     }
 
     public boolean allRoomsConnected() {
-        int v = quickFind[0];
+        int v = quickFind[random.nextInt(quickFind.length)];
         for(int i : quickFind) {
             if(i != v) {
                 return false;
@@ -285,11 +297,11 @@ public class Engine {
         }
         public Position() {
             int a = 0, b = 0;
-            while(a == 0) {
-                a = random.nextInt(WIDTH);
+            while(a == 0 || a == 1) {
+                a = random.nextInt(WIDTH - 1);
             }
-            while(b == 0) {
-                b = random.nextInt(HEIGHT);
+            while(b == 0 || b == 1) {
+                b = random.nextInt(HEIGHT - 1);
             }
             x = a;
             y = b;
