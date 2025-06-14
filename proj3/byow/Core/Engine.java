@@ -12,10 +12,17 @@ public class Engine {
     public static int seed;
     public static Random random;
     public static TETile[][] tiles;
-    public static final int SAFETY_FACTOR = 1;
-
+    public static final int SAFETY_FACTOR = 3;
+    public static final int HEIGHT_FACTOR = 7;
+    public static final int WIDTH_FACTOR = 7;
+    public static final int HALLWAY_COLOR = 50;
     public static int[] quickFind;
     public static TreeMap<Integer, Room> roomMap = new TreeMap<>();
+
+    public int determineNumberOfRooms(int height, int width) {
+        int area = height * width;
+        return area / 300;
+    }
 
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
@@ -62,6 +69,7 @@ public class Engine {
         random = new Random(seed);
 
         drawRooms();
+        initializeDS();
 
         while(!allRoomsConnected()) {
             connectRooms();
@@ -70,17 +78,26 @@ public class Engine {
         return tiles;
     }
 
+
+    private void initializeDS() {
+        quickFind = new int[roomMap.size()];
+        for(int i = 0; i < quickFind.length; i++) {
+            quickFind[i] = i;
+        }
+    }
+
     public void drawRooms() {
         int c = 0;
         int num = determineNumberOfRooms(HEIGHT, WIDTH);
         while (num > 0) {
 
+            //default constructor generates random position WITHIN the grid (not boundary)
             Position p = new Position();
             Room room = new Room(p);
-            room.height = random.nextInt(HEIGHT / 3);
-            room.depth = random.nextInt(HEIGHT / 3);
-            room.left = random.nextInt(WIDTH / 3);
-            room.right = random.nextInt(WIDTH / 3);
+            room.height = 3 + random.nextInt(HEIGHT_FACTOR);
+            room.depth = 3 + random.nextInt(HEIGHT_FACTOR);
+            room.left = 3 + random.nextInt(WIDTH_FACTOR);
+            room.right = 3 + random.nextInt(WIDTH_FACTOR);
 
             fitRoom(room, tiles);
             if (roomOverlap(room, tiles)) {
@@ -90,10 +107,6 @@ public class Engine {
             room.putWall(tiles);
             num = num - 1;
             roomMap.put(c++, room);
-        }
-        quickFind = new int[roomMap.size()];
-        for(int i = 0; i < quickFind.length; i++) {
-            quickFind[i] = i;
         }
     }
 
@@ -110,21 +123,13 @@ public class Engine {
             int a = random.nextInt(roomCount());
             int b = random.nextInt(roomCount());
             System.out.println(a + " " +  b);
-
             if(quickFind[a] == quickFind[b]) {
                 return;
             }
-            if(a == b) return;
+
             Room first = roomMap.get(a);
-//            if(first.entryPoints().isEmpty()) {
-//                System.out.println(first);
-//                return;
-//            }
             Room second = roomMap.get(b);
-//            if(second.entryPoints().isEmpty()) {
-//                System.out.println(second);
-//                return;
-//            }
+
             for(Position start : first.entryPoints()) {
                 for(Position end: second.entryPoints()) {
                     if(straightPathPossible(start, end)) {
@@ -132,8 +137,13 @@ public class Engine {
                         combine(a,b);
                         return;
                     } else {
-                        if(LpathPossible(start, end)) {
-                            makeLpath(start, end);
+                        boolean adjust = random.nextBoolean();
+                        if(adjust) return;
+                        adjust = random.nextBoolean();
+                        if(adjust) return;
+                        Position corner = LpathPossible(start, end);
+                        if(corner != null) {
+                            makeLpath(start, end, corner);
                             combine(a,b);
                             return;
                         }
@@ -142,9 +152,57 @@ public class Engine {
             }
         }
 
+    private void makeStraightPath(Position a, Position b) {
+        int dx = b.x() - a.x();
+        int dy = b.y() - a.y();
+        if(dx == 0) {
+            makeVerticalPath(a, b);
+            return;
+        }
+        if(dy == 0) {
+            makeHorizontalPath(a, b);
+        }
+    }
+
+    private void makeHorizontalPath(Position a, Position b) {
+        Position right = b.x() > a.x() ? b : a;
+        Position left = b.x() > a.x() ? a : b;
+
+        TETile hall = TETile.colorVariant(Tileset.FLOOR, 100, 100, 100, random);
+        tiles[left.x()][left.y()] = hall;
+        tiles[right.x()][right.y()] = hall;
+
+        TETile wall = Tileset.WALL;
+        wall = TETile.colorVariant(wall, HALLWAY_COLOR, HALLWAY_COLOR, HALLWAY_COLOR, random);
+        for(int x = left.x() + 1; x < right.x(); x++) {
+            tiles[x][a.y() + 1] = wall;
+            tiles[x][a.y()] = Tileset.FLOOR;
+            tiles[x][a.y() - 1] = wall;
+        }
+    }
+
+    private void makeVerticalPath(Position a, Position b) {
+        Position up = b.y() > a.y() ? b : a;
+        Position down = b.y() > a.y() ? a : b;
+
+        TETile hall = TETile.colorVariant(Tileset.FLOOR, 100, 100, 100, random);
+        tiles[down.x()][down.y()] = hall;
+        tiles[up.x()][up.y()] = hall;
+
+        TETile wall = Tileset.WALL;
+        wall = TETile.colorVariant(wall, HALLWAY_COLOR, HALLWAY_COLOR, HALLWAY_COLOR, random);
+
+        for(int y = down.y() + 1; y < up.y(); y++) {
+            tiles[a.x() - 1][y] = wall;
+            tiles[a.x()][y] = hall;
+            tiles[a.x() + 1][y] = wall;
+        }
+    }
+
     public int roomCount() {
         return roomMap.size();
     }
+
     public boolean allRoomsConnected() {
         int v = quickFind[0];
         for(int i : quickFind) {
@@ -154,6 +212,7 @@ public class Engine {
         }
         return true;
     }
+
     public int extractSeed(String inp) {
         String val = inp.toLowerCase();
         val = val.replace('n', ' ').replace('s', ' ');
@@ -184,16 +243,16 @@ public class Engine {
         int l = room.left;
         int r = room.right;
 
-        if (y + h >= height - 1) {
+        if (y + h > height - 1) {
             room.height = height - 1 - y;
         }
-        if (y - d <= 1) {
+        if (y - d < 1) {
             room.depth = y - 1;
         }
-        if (x + r >= width - 1) {
+        if (x + r > width - 1) {
             room.right = width - 1 - x;
         }
-        if (x - l <= 1) {
+        if (x - l < 1) {
             room.left = x - 1;
         }
     }
@@ -206,21 +265,15 @@ public class Engine {
         int xend = room.node.x() + room.right + 1;
         int yend = room.node.y() + room.height + 1;
 
-        for(int x = xstart; x <= xend; x++) {
-            for(int y = ystart; y <= yend; y++) {
-                if(!tiles[x][y].equals(Tileset.NOTHING)) {
+        for(int x = xstart; x <= xend + 1; x++) {
+            for(int y = ystart; y <= yend + 1; y++) {
+                if(!tiles[Math.min(x, WIDTH - 1)][Math.min(y, HEIGHT - 1)].equals(Tileset.NOTHING)) {
                     return true;
                 }
             }
         }
         return false;
     }
-
-    public int determineNumberOfRooms(int height, int width) {
-        int area = height * width;
-        return area / 500;
-    }
-
 
     public static class Position {
         private final int x;
@@ -249,16 +302,6 @@ public class Engine {
         public int y() {
             return this.y;
         }
-
-        public Position shift(int dx, int dy) {
-            if(x + dx >= WIDTH) {
-                dx = WIDTH - x - 1;
-            }
-            if(y + dy >= HEIGHT) {
-                dy = HEIGHT - y - 1;
-            }
-            return new Position(x + dx, y + dy);
-        }
     }
 
     public static class Room {
@@ -278,7 +321,7 @@ public class Engine {
             TETile tile = Tileset.FLOOR;
             for (int x = xstart; x <= xend; x++) {
                 for (int y = ystart; y <= yend; y++) {
-                    tiles[x][y] = TETile.colorVariant(tile, 200, 200, 200, random);
+                    tiles[x][y] = TETile.colorVariant(tile, 1000, 1000, 1000, random);
                 }
             }
         }
@@ -290,7 +333,8 @@ public class Engine {
             int xend = node.x() + right + 1;
             int yend = node.y() + height + 1;
 
-            TETile tile = TETile.colorVariant(Tileset.WALL, 50, 50, 50, random);
+            int color = HALLWAY_COLOR * 2;
+            TETile tile = TETile.colorVariant(Tileset.WALL, color, color, color, random);
             for (int x = xstart; x <= xend; x++) {
                 tiles[x][ystart] = tile;
                 tiles[x][yend] = tile;
@@ -321,10 +365,10 @@ public class Engine {
         }
         public LinkedList<Position> entryPoints() {
             LinkedList<Position> L = new LinkedList<>();
-            Position upperEntrance = node.shift(horizontalRange(), height  + 1);
-            Position lowerEntrance = node.shift(horizontalRange(), depth - 1);
-            Position leftEntrance = node.shift(node.x() - left - 1, verticalRange());
-            Position rightEntrance = node.shift(node.x() + right + 1, verticalRange());
+            Position upperEntrance = new Position(horizontalRange(), node.y() + height + 1);
+            Position lowerEntrance = new Position(horizontalRange(), node.y() - depth - 1);
+            Position leftEntrance = new Position(node.x() - left - 1, verticalRange());
+            Position rightEntrance = new Position(node.x() + right + 1, verticalRange());
 
             if(node.y() + height + SAFETY_FACTOR < HEIGHT) {
                 L.add(upperEntrance);
@@ -348,6 +392,7 @@ public class Engine {
             return L;
         }
     }
+
     public boolean straightPathPossible(Position a, Position b) {
         int dx = b.x() - a.x();
         int dy = b.y() - a.y();
@@ -364,7 +409,7 @@ public class Engine {
         //entrance node should be the wall entrance
         Position up = b.y() > a.y() ? b : a;
         Position down = b.y() > a.y() ? a : b;
-        if(down.x() + 1 >= WIDTH || down.x() - 1 < 0) {
+        if(down.x() >= tiles.length - 1 || down.x() < 1) {
             return false;
         }
         for(int x = down.x() - 1; x <= down.x() + 1; x++) {
@@ -375,17 +420,6 @@ public class Engine {
             }
         }
         return true;
-    }
-
-    public void makeVerticalPath(Position a, Position b) {
-        Position up = b.y() > a.y() ? b : a;
-        Position down = b.y() > a.y() ? a : b;
-        TETile wall = TETile.colorVariant(Tileset.WALL, 50, 50, 50, random);
-        for(int y = down.y() + 1; y < up.y(); y++) {
-            tiles[a.x() - 1][y] = wall;
-            tiles[a.x()][y] = Tileset.FLOOR;
-            tiles[a.x() + 1][y] = wall;
-        }
     }
 
     private boolean checkHorizontalPath(Position a, Position b) {
@@ -404,49 +438,39 @@ public class Engine {
         return true;
     }
 
-    public void makeHorizontalPath(Position a, Position b) {
-        Position right = b.x() > a.x() ? b : a;
-        Position left = b.x() > a.x() ? a : b;
-        TETile wall = TETile.colorVariant(Tileset.WALL, 50, 50, 50, random);
-        for(int x = left.x() + 1; x < right.x(); x++) {
-            tiles[x][a.y() + 1] = wall;
-            tiles[x][a.y()] = Tileset.FLOOR;
-            tiles[x][a.y() - 1] = wall;
-        }
-    }
-
-    public void makeStraightPath(Position a, Position b) {
-        if(checkHorizontalPath(a, b)) {
-            makeHorizontalPath(a, b);
-        } else {
-            if(checkVerticalPath(a, b)) {
-                makeVerticalPath(a, b);
-            }
-        }
-    }
-
-    public boolean LpathPossible(Position a, Position b) {
+    public Position LpathPossible(Position a, Position b) {
         Position guess1 = new Position(a.x(), b.y());
         Position guess2 = new Position(b.x(), a.y());
 
         if (straightPathPossible(a, guess1) && straightPathPossible(guess1, b)) {
-            return true;
+            return guess1;
         }
-        return straightPathPossible(a, guess2) && straightPathPossible(guess2, b);
+        if (straightPathPossible(a, guess2) && straightPathPossible(guess2, b)) {
+            return guess2;
+        }
+        return null;
     }
 
-    public void makeLpath(Position a, Position b) {
-        Position guess1 = new Position(a.x(), b.y());
-        Position guess2 = new Position(b.x(), a.y());
-        Position corner;
-        if (straightPathPossible(a, guess1) && straightPathPossible(guess1, b)) {
-            corner = guess1;
-        } else {
-            if (straightPathPossible(a, guess2) && straightPathPossible(guess2, b)) {
-                corner = guess2;
-            }
-            else return;
+    private void changeCornerTile(int x, int y, TETile wall) {
+
+        if(tiles[x][y] == Tileset.NOTHING) {
+            tiles[x][y] = wall;
         }
+        if(tiles[x][y] == Tileset.FLOOR) {
+            tiles[x][y] = wall;
+        }
+    }
+
+    public void makeLpath(Position a, Position b, Position corner) {
+        TETile wall = Tileset.WALL;
+        wall = TETile.colorVariant(wall, HALLWAY_COLOR, HALLWAY_COLOR, HALLWAY_COLOR, random);
+        for(int x = corner.x() - 1; x <= corner.x() + 1; x++) {
+            changeCornerTile(x, corner.y() + 1, wall);
+            changeCornerTile(x, corner.y() - 1, wall);
+            if(x == corner.x()) continue;
+            changeCornerTile(x, corner.y(), wall);
+        }
+
         makeStraightPath(a, corner);
         makeStraightPath(b, corner);
     }
