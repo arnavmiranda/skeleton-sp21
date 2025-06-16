@@ -22,7 +22,7 @@ public class Engine {
 
     public int determineNumberOfRooms(int height, int width) {
         int area = height * width;
-            return area / 100;
+            return area / 400;
     }
 
     /**
