@@ -3,9 +3,8 @@ package byow.Core;
 import java.awt.*;
 import java.io.*;
 import java.util.*;
-
 import byow.TileEngine.*;
-import edu.princeton.cs.introcs.StdDraw;
+import edu.princeton.cs.algs4.StdDraw;
 
 public class Engine {
     private static TERenderer ter = new TERenderer();
@@ -24,6 +23,7 @@ public class Engine {
     private static Player player;
     private static File saveFile = new File("save.txt");
     private String instructions = "";
+    private static String tracePath = "";
 
 
     /**
@@ -31,6 +31,79 @@ public class Engine {
      * including inputs from the main menu.
      */
     public void interactWithKeyboard() {
+        startScreen();
+    }
+
+    private void playGame(String prev) {
+        ter.initialize(WIDTH, HEIGHT + 5, 0, 0);
+        String path = prev;
+        Boolean necessary = true;
+        while(true) {
+            if(necessary) {
+                StdDraw.clear();
+                interactWithInputString(path);
+                ter.renderFrame(tiles);
+            }
+            if(StdDraw.hasNextKeyTyped()) {
+                path += StdDraw.nextKeyTyped();
+                necessary = true;
+            }
+
+        }
+
+    }
+
+    private void startScreen() {
+        StdDraw.enableDoubleBuffering();
+        StdDraw.setCanvasSize(50 * 16, 50 * 16);
+        StdDraw.setScale(0, 50);
+        StdDraw.clear(Color.white);
+        StdDraw.setFont(new Font("idk", Font.BOLD, 100));
+        StdDraw.text(25, HEIGHT - 10, "THE GAME");
+        StdDraw.show();
+        StdDraw.pause(1000);
+
+        StdDraw.setFont(new Font("idk", Font.CENTER_BASELINE, 30));
+        StdDraw.text(25, 20, "(N)ew game");
+        StdDraw.text(25, 15, "(L)oad game");
+        StdDraw.text(25, 10, "(Q)uit game");
+        StdDraw.show();
+        StdDraw.pause(500);
+        char letter;
+        while(!StdDraw.hasNextKeyTyped()) {
+        }
+        letter = StdDraw.nextKeyTyped();
+        StdDraw.clear(Color.white);
+        switch(letter) {
+            case 'N':
+            case 'n':
+                StdDraw.clear();
+                StdDraw.text(25, 35, "enter seed:");
+                StdDraw.text(25, 30, "(only positive numbers)");
+                StdDraw.text(25, 25, "(type X to end)");
+                StdDraw.show();
+                String display = "";
+                StringBuilder sb = new StringBuilder();
+                sb.append('n');
+                outer:
+                while(true) {
+                    while (StdDraw.hasNextKeyTyped()) {
+                        StdDraw.clear();
+                        letter = StdDraw.nextKeyTyped();
+                        if (letter == 'X') break outer;
+                        display += letter;
+                        if (letter >= '0' && letter <= '9') {
+                            StdDraw.text(25,25,display);
+                            StdDraw.show();
+                            sb.append(letter);
+                        }
+                    }
+                }
+                StdDraw.clear();
+                sb.append("s");
+                String seed = sb.toString();
+                playGame(seed);
+        }
     }
 
     /**
@@ -62,10 +135,8 @@ public class Engine {
         //
         // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
         // that works for many different input types.
-
         processInput(input);
         if(!input.toLowerCase().startsWith("l")) {
-            ter.initialize(WIDTH, HEIGHT + 5, 0, 0);
             tiles = new TETile[WIDTH][HEIGHT];
             fillWorldWithNothing(tiles);
             random = new Random(seed);
@@ -80,9 +151,6 @@ public class Engine {
             initializePlayer();
         }
         processInstructions(instructions);
-        ter.renderFrame(tiles);
-
-        System.out.println(player.pos.x() + " " + player.pos.y());
         return tiles;
     }
 
@@ -96,6 +164,7 @@ public class Engine {
             loadGame();
         }
         instructions = extractInstructions(input);
+        tracePath += instructions;
     }
 
     private String extractInstructions(String input) {
@@ -308,9 +377,9 @@ public class Engine {
             bf.write('n');
             bf.write(Integer.toString(seed));
             bf.write('s');
-            int index = instructions.indexOf(":q");
+            int index = tracePath.indexOf(":q");
             for(int i = 0; i < index; i++) {
-                bf.write(instructions.charAt(i));
+                bf.write(tracePath.charAt(i));
             }
             bf.flush();
             bf.close();
