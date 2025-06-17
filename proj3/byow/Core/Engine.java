@@ -1,26 +1,30 @@
 package byow.Core;
 
-import byow.TileEngine.*;
-
+import java.io.*;
 import java.util.*;
 
-public class Engine {
+import afu.org.checkerframework.checker.oigj.qual.O;
+import byow.TileEngine.*;
+
+public class Engine implements Serializable {
     TERenderer ter = new TERenderer();
     /* Feel free to change the width and height. */
-    public static final int WIDTH = 120;
-    public static final int HEIGHT = 60;
-    public static int seed;
-    public static Random random;
-    public static TETile[][] tiles;
-    public static final int SAFETY_FACTOR = 3;
-    public static final int HEIGHT_FACTOR = HEIGHT / 5;
-    public static final int WIDTH_FACTOR = WIDTH / 10;
-    public static final int HALLWAY_COLOR = 50;
-    public static int[] quickFind;
-    public static TreeMap<Integer, Room> roomMap = new TreeMap<>();
+    private static final int WIDTH = 100;
+    private static final int HEIGHT = 50;
+    private static int seed;
+    private static Random random;
+    private static TETile[][] tiles;
+    private static final int SAFETY_FACTOR = 3;
+    private static final int HEIGHT_FACTOR = HEIGHT / 5;
+    private static final int WIDTH_FACTOR = WIDTH / 10;
+    private static final int HALLWAY_COLOR = 50;
+    private static int[] quickFind;
+    private static TreeMap<Integer, Room> roomMap = new TreeMap<>();
     private static int counter;
+    private static Player player;
+    private static File saveFile = new File("save.txt");
 
-    public int determineNumberOfRooms(int height, int width) {
+    private int determineNumberOfRooms(int height, int width) {
         int area = height * width;
             return area / 400;
     }
@@ -61,12 +65,12 @@ public class Engine {
         //
         // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
         // that works for many different input types.
-        ter.initialize(WIDTH, HEIGHT);
+        ter.initialize(WIDTH, HEIGHT + 10 , 0, 0);
 
         tiles = new TETile[WIDTH][HEIGHT];
         fillWorldWithNothing(tiles);
 
-        seed = extractSeed(input);
+        processInput(input);
         random = new Random(seed);
 
         counter = 0;
@@ -78,10 +82,32 @@ public class Engine {
             if(counter > 10000) break;
             connectRooms();
         }
+        initializePlayer();
+        playerMovements(input);
+
         ter.renderFrame(tiles);
         return tiles;
     }
 
+    private void processInput(String input) {
+        seed = extractSeed(input);
+    }
+
+    private void initializePlayer() {
+        int x;
+        int y;
+        Position p;
+        while(true) {
+            x = random.nextInt(WIDTH - 1);
+            y = random.nextInt(HEIGHT - 1);
+            if(tiles[x][y] == Tileset.FLOOR) {
+                tiles[x][y] = Tileset.AVATAR;
+                p = new Position(x, y);
+                player = new Player(p);
+                break;
+            }
+        }
+    }
 
     private void initializeDS() {
         quickFind = new int[roomMap.size()];
@@ -90,7 +116,7 @@ public class Engine {
         }
     }
 
-    public void drawRooms() {
+    private void drawRooms() {
         int c = 0;
         int num = determineNumberOfRooms(HEIGHT, WIDTH);
         while (num > 0) {
@@ -119,7 +145,7 @@ public class Engine {
         }
     }
 
-    public void combine(int a, int b) {
+    private void combine(int a, int b) {
         int root = Math.min(quickFind[a], quickFind[b]);
         for(int i = 0; i < quickFind.length; i++) {
             if(quickFind[i] == quickFind[a] || quickFind[i] == quickFind[b]) {
@@ -128,7 +154,7 @@ public class Engine {
         }
     }
 
-    public void connectRooms() {
+    private void connectRooms() {
         int a = random.nextInt(roomCount());
         int b = random.nextInt(roomCount());
         System.out.println(a + " " + b);
@@ -211,11 +237,11 @@ public class Engine {
         }
     }
 
-    public int roomCount() {
+    private int roomCount() {
         return roomMap.size();
     }
 
-    public boolean allRoomsConnected() {
+    private boolean allRoomsConnected() {
         int v = quickFind[random.nextInt(quickFind.length)];
         for(int i : quickFind) {
             if(i != v) {
@@ -225,14 +251,37 @@ public class Engine {
         return true;
     }
 
-    public int extractSeed(String inp) {
-        String val = inp.toLowerCase();
-        val = val.replace('n', ' ').replace('s', ' ');
-        val = val.trim();
+    private int extractSeed(String inp) {
+        String string = inp.toLowerCase();
+        if(!string.startsWith("n")) {
+            return -1;
+        }
+        int index = string.indexOf('s');
+        if(index == -1) {
+            return -1;
+        }
+        StringBuilder sb = new StringBuilder();
+        for(int i = 1; i < index; i++) {
+            sb.append(string.charAt(i));
+        }
+        String val = sb.toString();
         return Integer.parseInt(val);
     }
 
-    public void fillWorldWithNothing(TETile[][] tiles) {
+    private void playerMovements(String inp) {
+        String string = inp.toLowerCase();
+        int index = 0;
+        if(string.startsWith("n")) {
+            index = string.indexOf("s");
+            if(index == -1) return;
+        }
+        for(int i = index + 1; i < string.length(); i++) {
+            player.move(string.charAt(i));
+        }
+
+    }
+
+    private void fillWorldWithNothing(TETile[][] tiles) {
         int height = tiles[0].length;
         int width = tiles.length;
         for (int x = 0; x < width; x += 1) {
@@ -242,7 +291,7 @@ public class Engine {
         }
     }
 
-    public void fitRoom(Room room, TETile[][] tiles) {
+    private void fitRoom(Room room, TETile[][] tiles) {
         //needs to leave 1 gap for the wall
         int height = tiles[0].length - 1;
         int width = tiles.length - 1;
@@ -269,7 +318,7 @@ public class Engine {
         }
     }
 
-    public boolean roomOverlap(Room room, TETile[][] tiles) {
+    private boolean roomOverlap(Room room, TETile[][] tiles) {
         //adding 1 to all boundaries to ensure wall checking is done as well
 
         int xstart = room.node.x() - room.left - 1;
@@ -287,7 +336,7 @@ public class Engine {
         return false;
     }
 
-    public static class Position {
+    private static class Position {
         private final int x;
         private final int y;
 
@@ -316,7 +365,51 @@ public class Engine {
         }
     }
 
-    public static class Room {
+    private static class Player {
+        public Position pos;
+
+        public Player(Position p) {
+            pos = p;
+        }
+
+        public void move(char c) {
+            int x = pos.x();
+            int y = pos.y();
+
+            switch(c) {
+                case 'w' :
+                    if(tiles[x][y + 1].character() == Tileset.FLOOR.character()) {
+                        pos = new Position(x, y + 1);
+                        tiles[x][y] = Tileset.FLOOR;
+                        tiles[x][y + 1] = Tileset.AVATAR;
+                    }
+                    break;
+                case 'a' :
+                    if(tiles[x - 1][y].character() == Tileset.FLOOR.character()) {
+                        pos = new Position(x - 1, y);
+                        tiles[x][y] = Tileset.FLOOR;
+                        tiles[x - 1][y] = Tileset.AVATAR;
+                    }
+                    break;
+                case 's' :
+                    if(tiles[x][y - 1].character() == Tileset.FLOOR.character()) {
+                        pos = new Position(x, y - 1);
+                        tiles[x][y] = Tileset.FLOOR;
+                        tiles[x][y - 1] = Tileset.AVATAR;
+                    }
+                    break;
+                case 'd' :
+                    if(tiles[x + 1][y].character() == Tileset.FLOOR.character()) {
+                        pos = new Position(x + 1, y);
+                        tiles[x][y] = Tileset.FLOOR;
+                        tiles[x + 1][y] = Tileset.AVATAR;
+                    }
+                    break;
+            }
+        }
+    }
+
+    private static class Room {
         public Position node;
         public int height = 0, depth = 0, left = 0, right = 0;
 
@@ -405,7 +498,7 @@ public class Engine {
         }
     }
 
-    public boolean straightPathPossible(Position a, Position b) {
+    private boolean straightPathPossible(Position a, Position b) {
         int dx = b.x() - a.x();
         int dy = b.y() - a.y();
         if(dx == 0) {
@@ -450,7 +543,7 @@ public class Engine {
         return true;
     }
 
-    public Position LpathPossible(Position a, Position b) {
+    private Position LpathPossible(Position a, Position b) {
         Position guess1 = new Position(a.x(), b.y());
         Position guess2 = new Position(b.x(), a.y());
 
@@ -473,7 +566,7 @@ public class Engine {
         }
     }
 
-    public void makeLpath(Position a, Position b, Position corner) {
+    private void makeLpath(Position a, Position b, Position corner) {
         TETile wall = Tileset.WALL;
         wall = TETile.colorVariant(wall, HALLWAY_COLOR, HALLWAY_COLOR, HALLWAY_COLOR, random);
         for(int x = corner.x() - 1; x <= corner.x() + 1; x++) {
