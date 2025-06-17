@@ -7,15 +7,14 @@ import java.util.*;
 import byow.TileEngine.*;
 import edu.princeton.cs.introcs.StdDraw;
 
-public class Engine implements Serializable {
-    TERenderer ter = new TERenderer();
-    /* Feel free to change the width and height. */
+public class Engine {
+    private static TERenderer ter = new TERenderer();
     private static final int WIDTH = 100;
     private static final int HEIGHT = 50;
     private static int seed;
     private static Random random;
     private static TETile[][] tiles;
-    private static final int SAFETY_FACTOR = 3;
+    private static final int SAFETY_FACTOR = 2;
     private static final int HEIGHT_FACTOR = HEIGHT / 5;
     private static final int WIDTH_FACTOR = WIDTH / 10;
     private static final int HALLWAY_COLOR = 50;
@@ -24,12 +23,8 @@ public class Engine implements Serializable {
     private static int counter;
     private static Player player;
     private static File saveFile = new File("save.txt");
-    private static String instructions = "";
+    private String instructions = "";
 
-    private int determineNumberOfRooms(int height, int width) {
-        int area = height * width;
-            return area / 400;
-    }
 
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
@@ -67,56 +62,55 @@ public class Engine implements Serializable {
         //
         // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
         // that works for many different input types.
-        ter.initialize(WIDTH, HEIGHT + 10 , 0, 0);
-
-        tiles = new TETile[WIDTH][HEIGHT];
-        fillWorldWithNothing(tiles);
 
         processInput(input);
-        random = new Random(seed);
-
-        counter = 0;
-        drawRooms();
-        initializeDS();
-
-        counter = 0;
-        while (!allRoomsConnected()) {
-            if(counter > 10000) break;
-            connectRooms();
+        if(!input.toLowerCase().startsWith("l")) {
+            ter.initialize(WIDTH, HEIGHT + 5, 0, 0);
+            tiles = new TETile[WIDTH][HEIGHT];
+            fillWorldWithNothing(tiles);
+            random = new Random(seed);
+            counter = 0;
+            drawRooms();
+            initializeDS();
+            counter = 0;
+            while (!allRoomsConnected()) {
+                connectRooms();
+                if (counter > 10000) break;
+            }
+            initializePlayer();
         }
-        initializePlayer();
-        processInstructions(input);
+        processInstructions(instructions);
+        ter.renderFrame(tiles);
 
+        System.out.println(player.pos.x() + " " + player.pos.y());
         return tiles;
     }
 
-    private void drawUI() {
-        int x;
-        int y;
-        StdDraw.setPenColor(Color.WHITE);
-        StdDraw.line(0, HEIGHT + 6, WIDTH, HEIGHT + 6);
-        while(true) {
-            x = (int) StdDraw.mouseX();
-            y = (int) StdDraw.mouseY();
-            //StdDraw.text(WIDTH - 10, HEIGHT + 8, tiles[x][y].description());
-            StdDraw.show();
-        }
-    }
-
-    private void processInput(String input) {
-        input = input.toLowerCase();
+    private void processInput(String inp) {
+        String input = inp.toLowerCase();
 
         if(input.startsWith("n")) {
             seed = extractSeed(input);
-            instructions = extractInstructions(input);
         }
+        if(input.startsWith("l")) {
+            loadGame();
+        }
+        instructions = extractInstructions(input);
     }
 
     private String extractInstructions(String input) {
-        int index = input.indexOf("s");
         StringBuilder sb = new StringBuilder();
-        for(int i = index + 1; i < input.length(); i++) {
-            sb.append(input.charAt(i));
+
+        if(input.startsWith("n")) {
+            int index = input.indexOf("s");
+            for (int i = index + 1; i < input.length(); i++) {
+                sb.append(input.charAt(i));
+            }
+        }
+        if(input.startsWith("l")) {
+            for(int i = 1; i < input.length(); i++) {
+                sb.append(input.charAt(i));
+            }
         }
         return sb.toString();
     }
@@ -137,6 +131,11 @@ public class Engine implements Serializable {
         }
     }
 
+    private int determineNumberOfRooms(int height, int width) {
+        int area = height * width;
+        return area / 400;
+    }
+
     private void initializeDS() {
         quickFind = new int[roomMap.size()];
         for(int i = 0; i < quickFind.length; i++) {
@@ -148,7 +147,6 @@ public class Engine implements Serializable {
         int c = 0;
         int num = determineNumberOfRooms(HEIGHT, WIDTH);
         while (num > 0) {
-
             if(counter > 10000) {
                 break;
             }
@@ -185,7 +183,6 @@ public class Engine implements Serializable {
     private void connectRooms() {
         int a = random.nextInt(roomCount());
         int b = random.nextInt(roomCount());
-        System.out.println(a + " " + b);
         if (quickFind[a] == quickFind[b]) {
             return;
         }
@@ -279,8 +276,7 @@ public class Engine implements Serializable {
         return true;
     }
 
-    private int extractSeed(String inp) {
-        String string = inp.toLowerCase();
+    private int extractSeed(String string) {
         int index = string.indexOf('s');
         StringBuilder sb = new StringBuilder();
         for(int i = 1; i < index; i++) {
@@ -291,24 +287,18 @@ public class Engine implements Serializable {
     }
 
     private void processInstructions(String instructions) {
-        if (instructions.isEmpty()) {
+        if (instructions.isBlank()) {
             return;
         }
+        int qi = instructions.indexOf(":q");
         for (int i = 0; i < instructions.length(); i++) {
+            if(i == qi) {
+                quitGame();
+                break;
+            }
             char letter = instructions.charAt(i);
-            if(letter == ':') {
-                if(i!= instructions.length() - 1 && instructions.charAt(i + 1) != 'q') {
-                    quitGame();
-                    break;
-                }
-            }
-            if(letter == 'l') {
-                loadGame();
-            }
             player.move(letter);
         }
-        ter.renderFrame(tiles);
-        drawUI();
     }
 
     private void quitGame() {
@@ -334,6 +324,9 @@ public class Engine implements Serializable {
         try {
             br = new BufferedReader(new FileReader(saveFile));
             String line = br.readLine();
+            if(line.isBlank()) {
+                return;
+            }
             interactWithInputString(line);
         } catch (FileNotFoundException e) {
             throw new RuntimeException("READfilenotfound");
@@ -466,7 +459,9 @@ public class Engine implements Serializable {
                         tiles[x + 1][y] = Tileset.AVATAR;
                     }
                     break;
+                default: break;
             }
+
         }
     }
 
