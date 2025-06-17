@@ -1,10 +1,11 @@
 package byow.Core;
 
+import java.awt.*;
 import java.io.*;
 import java.util.*;
 
-import afu.org.checkerframework.checker.oigj.qual.O;
 import byow.TileEngine.*;
+import edu.princeton.cs.introcs.StdDraw;
 
 public class Engine implements Serializable {
     TERenderer ter = new TERenderer();
@@ -23,6 +24,7 @@ public class Engine implements Serializable {
     private static int counter;
     private static Player player;
     private static File saveFile = new File("save.txt");
+    private static String instructions = "";
 
     private int determineNumberOfRooms(int height, int width) {
         int area = height * width;
@@ -83,14 +85,40 @@ public class Engine implements Serializable {
             connectRooms();
         }
         initializePlayer();
-        playerMovements(input);
+        processInstructions(input);
 
-        ter.renderFrame(tiles);
         return tiles;
     }
 
+    private void drawUI() {
+        int x;
+        int y;
+        StdDraw.setPenColor(Color.WHITE);
+        StdDraw.line(0, HEIGHT + 6, WIDTH, HEIGHT + 6);
+        while(true) {
+            x = (int) StdDraw.mouseX();
+            y = (int) StdDraw.mouseY();
+            //StdDraw.text(WIDTH - 10, HEIGHT + 8, tiles[x][y].description());
+            StdDraw.show();
+        }
+    }
+
     private void processInput(String input) {
-        seed = extractSeed(input);
+        input = input.toLowerCase();
+
+        if(input.startsWith("n")) {
+            seed = extractSeed(input);
+            instructions = extractInstructions(input);
+        }
+    }
+
+    private String extractInstructions(String input) {
+        int index = input.indexOf("s");
+        StringBuilder sb = new StringBuilder();
+        for(int i = index + 1; i < input.length(); i++) {
+            sb.append(input.charAt(i));
+        }
+        return sb.toString();
     }
 
     private void initializePlayer() {
@@ -253,13 +281,7 @@ public class Engine implements Serializable {
 
     private int extractSeed(String inp) {
         String string = inp.toLowerCase();
-        if(!string.startsWith("n")) {
-            return -1;
-        }
         int index = string.indexOf('s');
-        if(index == -1) {
-            return -1;
-        }
         StringBuilder sb = new StringBuilder();
         for(int i = 1; i < index; i++) {
             sb.append(string.charAt(i));
@@ -268,17 +290,56 @@ public class Engine implements Serializable {
         return Integer.parseInt(val);
     }
 
-    private void playerMovements(String inp) {
-        String string = inp.toLowerCase();
-        int index = 0;
-        if(string.startsWith("n")) {
-            index = string.indexOf("s");
-            if(index == -1) return;
+    private void processInstructions(String instructions) {
+        if (instructions.isEmpty()) {
+            return;
         }
-        for(int i = index + 1; i < string.length(); i++) {
-            player.move(string.charAt(i));
+        for (int i = 0; i < instructions.length(); i++) {
+            char letter = instructions.charAt(i);
+            if(letter == ':') {
+                if(i!= instructions.length() - 1 && instructions.charAt(i + 1) != 'q') {
+                    quitGame();
+                    break;
+                }
+            }
+            if(letter == 'l') {
+                loadGame();
+            }
+            player.move(letter);
         }
+        ter.renderFrame(tiles);
+        drawUI();
+    }
 
+    private void quitGame() {
+        BufferedWriter bf = null;
+        try {
+            bf = new BufferedWriter(new FileWriter(saveFile, false));
+            bf.write('n');
+            bf.write(Integer.toString(seed));
+            bf.write('s');
+            int index = instructions.indexOf(":q");
+            for(int i = 0; i < index; i++) {
+                bf.write(instructions.charAt(i));
+            }
+            bf.flush();
+            bf.close();
+        } catch (IOException e) {
+            throw new RuntimeException("WRITEioexception");
+        }
+    }
+
+    private void loadGame() {
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new FileReader(saveFile));
+            String line = br.readLine();
+            interactWithInputString(line);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException("READfilenotfound");
+        } catch (IOException e) {
+            throw new RuntimeException("READIOexception");
+        }
     }
 
     private void fillWorldWithNothing(TETile[][] tiles) {
