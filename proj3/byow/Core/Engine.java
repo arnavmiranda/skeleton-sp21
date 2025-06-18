@@ -4,7 +4,7 @@ import java.awt.*;
 import java.io.*;
 import java.util.*;
 import byow.TileEngine.*;
-import edu.princeton.cs.algs4.StdDraw;
+import edu.princeton.cs.introcs.StdDraw;
 
 public class Engine {
     private static TERenderer ter = new TERenderer();
@@ -34,23 +34,24 @@ public class Engine {
         startScreen();
     }
 
-    private void playGame(String prev) {
+    private void playGame(String path) {
         ter.initialize(WIDTH, HEIGHT + 5, 0, 0);
-        String path = prev;
-        Boolean necessary = true;
+        tiles = interactWithInputString(path);
+
         while(true) {
-            if(necessary) {
-                StdDraw.clear();
-                interactWithInputString(path);
-                ter.renderFrame(tiles);
-            }
             if(StdDraw.hasNextKeyTyped()) {
-                path += StdDraw.nextKeyTyped();
-                necessary = true;
+                char chr = StdDraw.nextKeyTyped();
+                if (chr == 'q' || chr == 'Q') {
+                    quitGame();
+                    return;
+                }
+                player.move(chr);
             }
-
+            StdDraw.clear();
+            ter.renderFrame(tiles);
+            StdDraw.show();
+            StdDraw.pause(20);
         }
-
     }
 
     private void startScreen() {
@@ -68,7 +69,6 @@ public class Engine {
         StdDraw.text(25, 15, "(L)oad game");
         StdDraw.text(25, 10, "(Q)uit game");
         StdDraw.show();
-        StdDraw.pause(500);
         char letter;
         while(!StdDraw.hasNextKeyTyped()) {
         }
@@ -103,6 +103,7 @@ public class Engine {
                 sb.append("s");
                 String seed = sb.toString();
                 playGame(seed);
+                break;
         }
     }
 
@@ -500,6 +501,7 @@ public class Engine {
             int y = pos.y();
 
             switch(c) {
+                case 'W' :
                 case 'w' :
                     if(tiles[x][y + 1].character() == Tileset.FLOOR.character()) {
                         pos = new Position(x, y + 1);
@@ -507,6 +509,7 @@ public class Engine {
                         tiles[x][y + 1] = Tileset.AVATAR;
                     }
                     break;
+                case 'A' :
                 case 'a' :
                     if(tiles[x - 1][y].character() == Tileset.FLOOR.character()) {
                         pos = new Position(x - 1, y);
@@ -514,6 +517,7 @@ public class Engine {
                         tiles[x - 1][y] = Tileset.AVATAR;
                     }
                     break;
+                case 'S' :
                 case 's' :
                     if(tiles[x][y - 1].character() == Tileset.FLOOR.character()) {
                         pos = new Position(x, y - 1);
@@ -521,6 +525,7 @@ public class Engine {
                         tiles[x][y - 1] = Tileset.AVATAR;
                     }
                     break;
+                case 'D' :
                 case 'd' :
                     if(tiles[x + 1][y].character() == Tileset.FLOOR.character()) {
                         pos = new Position(x + 1, y);
