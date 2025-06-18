@@ -21,7 +21,7 @@ public class Engine {
     private static TreeMap<Integer, Room> roomMap = new TreeMap<>();
     private static int counter;
     private static Player player;
-    private static File saveFile = new File("save.txt");
+    private static final File saveFile = new File("save.txt");
     private String instructions = "";
     private static String tracePath = "";
 
@@ -32,26 +32,6 @@ public class Engine {
      */
     public void interactWithKeyboard() {
         startScreen();
-    }
-
-    private void playGame(String path) {
-        ter.initialize(WIDTH, HEIGHT + 5, 0, 0);
-        tiles = interactWithInputString(path);
-
-        while(true) {
-            if(StdDraw.hasNextKeyTyped()) {
-                char chr = StdDraw.nextKeyTyped();
-                if (chr == 'q' || chr == 'Q') {
-                    quitGame();
-                    return;
-                }
-                player.move(chr);
-            }
-            StdDraw.clear();
-            ter.renderFrame(tiles);
-            StdDraw.show();
-            StdDraw.pause(20);
-        }
     }
 
     private void startScreen() {
@@ -80,7 +60,7 @@ public class Engine {
                 StdDraw.clear();
                 StdDraw.text(25, 35, "enter seed:");
                 StdDraw.text(25, 30, "(only positive numbers)");
-                StdDraw.text(25, 25, "(type X to end)");
+                StdDraw.text(25, 25, "(type X to enter)");
                 StdDraw.show();
                 String display = "";
                 StringBuilder sb = new StringBuilder();
@@ -90,9 +70,9 @@ public class Engine {
                     while (StdDraw.hasNextKeyTyped()) {
                         StdDraw.clear();
                         letter = StdDraw.nextKeyTyped();
-                        if (letter == 'X') break outer;
-                        display += letter;
+                        if (letter == 'X' || letter == 'x') break outer;
                         if (letter >= '0' && letter <= '9') {
+                            display += letter;
                             StdDraw.text(25,25,display);
                             StdDraw.show();
                             sb.append(letter);
@@ -104,8 +84,58 @@ public class Engine {
                 String seed = sb.toString();
                 playGame(seed);
                 break;
+
+            case 'L' :
+            case 'l' :
+                String path = loadGame();
+                if(path.isBlank()) {
+                    break;
+                }
+                StdDraw.clear();
+                playGame(path);
+                break;
+            case 'q' :
+            case 'Q' :
+                return;
         }
     }
+
+    private void playGame(String path) {
+        ter.initialize(WIDTH, HEIGHT + 5, 0, 0);
+        tiles = interactWithInputString(path);
+        tracePath = path;
+        while(true) {
+            if(StdDraw.hasNextKeyTyped()) {
+                char chr = Character.toLowerCase(StdDraw.nextKeyTyped());
+                if(chr == 'q') {
+                    quitGame();
+                    startScreen();
+                }
+                player.move(chr);
+                if("wasd".contains(Character.toString(chr))) {
+                    tracePath += chr;
+                }
+            }
+            ter.renderFrame(tiles);
+            drawUX();
+            StdDraw.show();
+            StdDraw.pause(100);
+        }
+    }
+
+    private void drawUX() {
+        StdDraw.setPenColor(Color.white);
+        int width = tiles.length;
+        int height = tiles[0].length;
+        StdDraw.line(0, HEIGHT, WIDTH, HEIGHT);
+        int x = (int) StdDraw.mouseX();
+        int y = (int) StdDraw.mouseY();
+        if (x > width - 1) return;
+        if (y > height - 1) return;
+        String text = tiles[x][y].description();
+        StdDraw.textLeft(2, HEIGHT + 3, text);
+    }
+
 
     /**
      * Method used for autograding and testing your code. The input string will be a series
@@ -138,6 +168,7 @@ public class Engine {
         // that works for many different input types.
         processInput(input);
         if(!input.toLowerCase().startsWith("l")) {
+            tracePath = "";
             tiles = new TETile[WIDTH][HEIGHT];
             fillWorldWithNothing(tiles);
             random = new Random(seed);
@@ -162,7 +193,9 @@ public class Engine {
             seed = extractSeed(input);
         }
         if(input.startsWith("l")) {
-            loadGame();
+            String line = loadGame();
+            input = line + input.substring(1);
+            processInput(input);
         }
         instructions = extractInstructions(input);
         tracePath += instructions;
@@ -360,7 +393,7 @@ public class Engine {
         if (instructions.isBlank()) {
             return;
         }
-        int qi = instructions.indexOf(":q");
+        int qi = instructions.indexOf("q");
         for (int i = 0; i < instructions.length(); i++) {
             if(i == qi) {
                 quitGame();
@@ -378,10 +411,10 @@ public class Engine {
             bf.write('n');
             bf.write(Integer.toString(seed));
             bf.write('s');
-            int index = tracePath.indexOf(":q");
-            for(int i = 0; i < index; i++) {
+            for(int i = 0; i < tracePath.length(); i++) {
                 bf.write(tracePath.charAt(i));
             }
+            tracePath = "";
             bf.flush();
             bf.close();
         } catch (IOException e) {
@@ -389,20 +422,21 @@ public class Engine {
         }
     }
 
-    private void loadGame() {
+    private String loadGame() {
         BufferedReader br = null;
         try {
             br = new BufferedReader(new FileReader(saveFile));
             String line = br.readLine();
-            if(line.isBlank()) {
-                return;
+            if(!line.isBlank()) {
+                br.close();
+                return line;
             }
-            interactWithInputString(line);
         } catch (FileNotFoundException e) {
             throw new RuntimeException("READfilenotfound");
         } catch (IOException e) {
             throw new RuntimeException("READIOexception");
         }
+        return "";
     }
 
     private void fillWorldWithNothing(TETile[][] tiles) {
