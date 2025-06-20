@@ -13,6 +13,7 @@ public class Engine {
     private static int seed;
     private static Random random;
     private static TETile[][] tiles;
+    private static TETile[][] tempTiles;
     private static final int SAFETY_FACTOR = 3;
     private static final int HEIGHT_FACTOR = HEIGHT / 5;
     private static final int WIDTH_FACTOR = WIDTH / 10;
@@ -26,6 +27,8 @@ public class Engine {
     private static final File saveFile = new File("save.txt");
     private String instructions = "";
     private static String tracePath = "";
+    private static boolean los = false;
+    private static final double RENDER_DISTANCE = 7.0;
 
 
     /**
@@ -44,7 +47,6 @@ public class Engine {
         StdDraw.setFont(new Font("idk", Font.BOLD, 100));
         StdDraw.text(25, HEIGHT - 10, "THE GAME");
         StdDraw.show();
-        StdDraw.pause(1000);
 
         StdDraw.setFont(new Font("idk", Font.CENTER_BASELINE, 30));
         StdDraw.text(25, 20, "(N)ew game");
@@ -113,16 +115,55 @@ public class Engine {
                     quitGame();
                     startScreen();
                 }
+                if(chr == ' ') {
+                    los = !los;
+                    continue;
+                }
                 player.move(chr);
                 if("wasd".contains(Character.toString(chr))) {
                     tracePath += chr;
                 }
             }
-            ter.renderFrame(tiles);
+            cloneTiles();
+            if(los) {
+                lineOfSight();
+                ter.renderFrame(tempTiles);
+            } else {
+                ter.renderFrame(tiles);
+            }
             drawUX();
             StdDraw.show();
             StdDraw.pause(10);
         }
+    }
+
+    private void cloneTiles() {
+        for(int x = 0; x < tiles.length; x++) {
+            for(int y = 0; y < tiles[0].length; y++) {
+                tempTiles[x][y] = tiles[x][y];
+            }
+        }
+    }
+
+    private void lineOfSight() {
+        for(int x = 0; x < tiles.length; x++) {
+            for(int y = 0; y < tiles[0].length; y++) {
+                hideTileIfNecessary(x, y);
+            }
+        }
+    }
+
+    private void hideTileIfNecessary(int x, int y) {
+        double dist = calculateDistance(player.pos, new Position(x, y));
+        if(dist > RENDER_DISTANCE) {
+            tempTiles[x][y] = Tileset.NOTHING;
+        }
+    }
+
+    private double calculateDistance(Position pos, Position tilePos) {
+        double xsquare = Math.pow(pos.x() - tilePos.x(), 2);
+        double ysquare = Math.pow(pos.y() - tilePos.y(), 2);
+        return Math.sqrt(xsquare + ysquare);
     }
 
     private void drawUX() {
@@ -135,6 +176,11 @@ public class Engine {
         if (x > width - 1) return;
         if (y > height - 1) return;
         String text = tiles[x][y].description();
+        if(los) {
+            if(calculateDistance(new Position(x, y), player.pos) > RENDER_DISTANCE) {
+                text = "unknown";
+            }
+        }
         StdDraw.textLeft(2, HEIGHT + 2, text);
     }
 
@@ -172,6 +218,7 @@ public class Engine {
         if(!input.toLowerCase().startsWith("l")) {
             tracePath = "";
             tiles = new TETile[WIDTH][HEIGHT];
+            tempTiles = new TETile[WIDTH][HEIGHT];
             fillWorldWithNothing(tiles);
             random = new Random(seed);
             FLOOR_TILE = TETile.colorVariant(Tileset.FLOOR, 100, 100, 100, random);
