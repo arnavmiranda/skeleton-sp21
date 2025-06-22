@@ -114,6 +114,10 @@ public class TETile {
         return description;
     }
 
+    public Color color() {
+        return backgroundColor;
+    }
+
     /**
      * Creates a copy of the given tile with a slightly different text color. The new
      * color will have a red value that is within dr of the current red value,

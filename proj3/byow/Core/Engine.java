@@ -54,12 +54,16 @@ public class Engine {
         StdDraw.text(25, 10, "(Q)uit game");
         StdDraw.show();
         char letter;
-        while(!StdDraw.hasNextKeyTyped()) {
+        while(true) {
+            if(StdDraw.hasNextKeyTyped()) {
+                letter = Character.toLowerCase(StdDraw.nextKeyTyped());
+                if(letter == 'n' || letter == 'l' || letter == 'q') {
+                    break;
+                }
+            }
         }
-        letter = StdDraw.nextKeyTyped();
         StdDraw.clear(Color.white);
         switch(letter) {
-            case 'N':
             case 'n':
                 StdDraw.clear();
                 StdDraw.text(25, 35, "enter seed:");
@@ -89,7 +93,6 @@ public class Engine {
                 playGame(seed);
                 break;
 
-            case 'L' :
             case 'l' :
                 String path = loadGame();
                 if(path.isBlank()) {
@@ -98,8 +101,8 @@ public class Engine {
                 StdDraw.clear();
                 playGame(path);
                 break;
+
             case 'q' :
-            case 'Q' :
                 break;
         }
     }
@@ -137,6 +140,24 @@ public class Engine {
         }
     }
 
+    private void addLightSource() {
+        Color color;
+        int choice = random.nextInt(10);
+        switch(choice) {
+        }
+
+        for(int i = 0; i < quickFind.length; i++) {
+            Room room = roomMap.get(i);
+            Position pos = room.node;
+            for(int x = pos.x() - room.left; x <= pos.x() + room.right; x++) {
+                for(int y = pos.y() - room.depth; y <= pos.y() + room.height; y++) {
+                    int dist = (int) calculateDistance(pos, new Position(x, y));
+                    tiles[x][y] = floorGradient(color, dist);
+                }
+            }
+        }
+    }
+
     private void cloneTiles() {
         for(int x = 0; x < tiles.length; x++) {
             for(int y = 0; y < tiles[0].length; y++) {
@@ -164,6 +185,13 @@ public class Engine {
         double xsquare = Math.pow(pos.x() - tilePos.x(), 2);
         double ysquare = Math.pow(pos.y() - tilePos.y(), 2);
         return Math.sqrt(xsquare + ysquare);
+    }
+
+    private TETile floorGradient(Color color, int num) {
+        for(int i = 1; i < num; i++) {
+            color = color.darker();
+        }
+        return new TETile(FLOOR_TILE, color);
     }
 
     private void drawUX() {
@@ -221,8 +249,10 @@ public class Engine {
             tempTiles = new TETile[WIDTH][HEIGHT];
             fillWorldWithNothing(tiles);
             random = new Random(seed);
-            FLOOR_TILE = TETile.colorVariant(Tileset.FLOOR, 100, 100, 100, random);
-            WALL_TILE = TETile.colorVariant(Tileset.WALL, 100, 100, 100, random);
+            FLOOR_TILE = new TETile(Tileset.FLOOR,
+                    new Color(random.nextInt(255), random.nextInt(255), random.nextInt(255)));
+            WALL_TILE = new TETile(Tileset.WALL,
+                    new Color(random.nextInt(255), random.nextInt(255), random.nextInt(255)));
             TRAVELLED_PATH_TILE = TETile.colorVariant(Tileset.FLOOR, 100, 100, 100, random);
             counter = 0;
             drawRooms();
@@ -232,6 +262,7 @@ public class Engine {
                 connectRooms();
                 if (counter > 10000) break;
             }
+            addLightSource();
             initializePlayer();
         }
         processInstructions(instructions);
