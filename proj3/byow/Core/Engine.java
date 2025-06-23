@@ -140,13 +140,46 @@ public class Engine {
         }
     }
 
-    private void addLightSource() {
-        Color color;
+    private Color getRandomColor() {
+        Color color = null;
         int choice = random.nextInt(10);
         switch(choice) {
+            case 0:
+                color = Color.RED;
+                break;
+            case 1:
+                color = Color.BLUE;
+                break;
+            case 2:
+                color = Color.GREEN;
+                break;
+            case 3:
+                color = Color.CYAN;
+                break;
+            case 4:
+                color = Color.MAGENTA;
+                break;
+            case 5:
+                color = Color.YELLOW;
+                break;
+            case 6:
+                color = Color.ORANGE;
+                break;
+            case 7:
+                color = Color.PINK;
+                break;
+            case 8:
+                color = Color.LIGHT_GRAY;
+                break;
+            case 9:
+                color = Color.WHITE;
+                break;
         }
-
+        return color;
+    }
+    private void addLightSource() {
         for(int i = 0; i < quickFind.length; i++) {
+            Color color = getRandomColor();
             Room room = roomMap.get(i);
             Position pos = room.node;
             for(int x = pos.x() - room.left; x <= pos.x() + room.right; x++) {
